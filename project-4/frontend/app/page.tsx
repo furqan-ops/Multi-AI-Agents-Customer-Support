@@ -12,10 +12,12 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string>('')
   const [audioRepliesEnabled, setAudioRepliesEnabled] = useState<boolean>(true)
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null)
+  const [speakingCharIndex, setSpeakingCharIndex] = useState<number | null>(null)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   const recorderRef = useRef<VoiceRecorderHandle>(null)
   const currentAudioRef = useRef<HTMLAudioElement | null>(null)
+  const speechIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     setSessionId(generateUUID())
@@ -121,6 +123,21 @@ export default function Home() {
       if (audioRepliesEnabled) {
         setSpeakingMessageId(agentMessage.id)
 
+        // Pre-calculate word start positions
+        const wordPositions: number[] = []
+        const wordRegex = /\S+/g
+        let match: RegExpExecArray | null
+        while ((match = wordRegex.exec(agentResponseText)) !== null) {
+          wordPositions.push(match.index)
+        }
+        setSpeakingCharIndex(wordPositions[0] ?? 0)
+
+        // Clear any lingering speech interval
+        if (speechIntervalRef.current) {
+          clearInterval(speechIntervalRef.current)
+          speechIntervalRef.current = null
+        }
+
         if (audioUrl) {
           try {
             if (currentAudioRef.current) {
@@ -129,21 +146,52 @@ export default function Home() {
             }
             const audio = new Audio(audioUrl)
             currentAudioRef.current = audio
+
+            audio.onplay = () => {
+              if (speechIntervalRef.current) clearInterval(speechIntervalRef.current)
+              speechIntervalRef.current = setInterval(() => {
+                if (audio.duration && !audio.paused && wordPositions.length > 0) {
+                  const progress = Math.min(1, Math.max(0, audio.currentTime / audio.duration))
+                  const targetIdx = Math.min(
+                    wordPositions.length - 1,
+                    Math.floor(progress * wordPositions.length)
+                  )
+                  setSpeakingCharIndex(wordPositions[targetIdx])
+                }
+              }, 60)
+            }
+
             audio.onended = () => {
+              if (speechIntervalRef.current) {
+                clearInterval(speechIntervalRef.current)
+                speechIntervalRef.current = null
+              }
               setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+              setSpeakingCharIndex(null)
               currentAudioRef.current = null
             }
             audio.onpause = () => {
+              if (speechIntervalRef.current) {
+                clearInterval(speechIntervalRef.current)
+                speechIntervalRef.current = null
+              }
               setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+              setSpeakingCharIndex(null)
             }
             audio.onerror = () => {
+              if (speechIntervalRef.current) {
+                clearInterval(speechIntervalRef.current)
+                speechIntervalRef.current = null
+              }
               setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+              setSpeakingCharIndex(null)
               currentAudioRef.current = null
             }
             await audio.play()
           } catch (playErr) {
             console.warn('Audio auto-play prevented:', playErr)
             setSpeakingMessageId(null)
+            setSpeakingCharIndex(null)
           }
         } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           try {
@@ -151,23 +199,75 @@ export default function Home() {
             const utterance = new SpeechSynthesisUtterance(agentResponseText)
             utterance.rate = 1.0
             utterance.pitch = 1.0
+
+            let boundaryFired = false
+
+            utterance.onboundary = (event: SpeechSynthesisEvent) => {
+              if (event.name === 'word' || !event.name) {
+                boundaryFired = true
+                if (speechIntervalRef.current) {
+                  clearInterval(speechIntervalRef.current)
+                  speechIntervalRef.current = null
+                }
+                setSpeakingCharIndex(event.charIndex)
+              }
+            }
+
+            // Fallback word stepper in case the OS voice engine omits onboundary events
+            let fallbackWordIdx = 0
+            speechIntervalRef.current = setInterval(() => {
+              if (!boundaryFired) {
+                fallbackWordIdx++
+                if (fallbackWordIdx < wordPositions.length) {
+                  setSpeakingCharIndex(wordPositions[fallbackWordIdx])
+                } else {
+                  if (speechIntervalRef.current) {
+                    clearInterval(speechIntervalRef.current)
+                    speechIntervalRef.current = null
+                  }
+                }
+              } else {
+                if (speechIntervalRef.current) {
+                  clearInterval(speechIntervalRef.current)
+                  speechIntervalRef.current = null
+                }
+              }
+            }, 360)
+
             utterance.onend = () => {
+              if (speechIntervalRef.current) {
+                clearInterval(speechIntervalRef.current)
+                speechIntervalRef.current = null
+              }
               setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+              setSpeakingCharIndex(null)
             }
             utterance.onerror = () => {
+              if (speechIntervalRef.current) {
+                clearInterval(speechIntervalRef.current)
+                speechIntervalRef.current = null
+              }
               setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+              setSpeakingCharIndex(null)
             }
             utterance.onpause = () => {
+              if (speechIntervalRef.current) {
+                clearInterval(speechIntervalRef.current)
+                speechIntervalRef.current = null
+              }
               setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+              setSpeakingCharIndex(null)
             }
             window.speechSynthesis.speak(utterance)
           } catch (synthErr) {
             console.warn('Speech synthesis error:', synthErr)
             setSpeakingMessageId(null)
+            setSpeakingCharIndex(null)
           }
         }
       } else {
         setSpeakingMessageId(null)
+        setSpeakingCharIndex(null)
       }
 
       setIsProcessing(false)
@@ -213,6 +313,10 @@ export default function Home() {
     const nextState = !audioRepliesEnabled
     setAudioRepliesEnabled(nextState)
     if (!nextState) {
+      if (speechIntervalRef.current) {
+        clearInterval(speechIntervalRef.current)
+        speechIntervalRef.current = null
+      }
       if (currentAudioRef.current) {
         currentAudioRef.current.pause()
         currentAudioRef.current.currentTime = 0
@@ -222,10 +326,15 @@ export default function Home() {
         window.speechSynthesis.cancel()
       }
       setSpeakingMessageId(null)
+      setSpeakingCharIndex(null)
     }
   }
 
   const clearChat = () => {
+    if (speechIntervalRef.current) {
+      clearInterval(speechIntervalRef.current)
+      speechIntervalRef.current = null
+    }
     if (currentAudioRef.current) {
       currentAudioRef.current.pause()
       currentAudioRef.current.currentTime = 0
@@ -235,6 +344,7 @@ export default function Home() {
       window.speechSynthesis.cancel()
     }
     setSpeakingMessageId(null)
+    setSpeakingCharIndex(null)
     setMessages([])
   }
 
@@ -446,6 +556,7 @@ export default function Home() {
               messages={messages}
               isThinking={isProcessing}
               speakingMessageId={speakingMessageId}
+              speakingCharIndex={speakingCharIndex}
             />
           )}
 

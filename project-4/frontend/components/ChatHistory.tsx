@@ -14,12 +14,93 @@ interface ChatHistoryProps {
   messages: Message[]
   isThinking?: boolean
   speakingMessageId?: string | null
+  speakingCharIndex?: number | null
+}
+
+function FormattedMessageText({
+  text,
+  isSpeaking,
+  speakingCharIndex,
+}: {
+  text: string
+  isSpeaking: boolean
+  speakingCharIndex?: number | null
+}) {
+  if (!isSpeaking || speakingCharIndex === null || speakingCharIndex === undefined) {
+    return <div className="whitespace-pre-wrap">{text}</div>
+  }
+
+  // Split into tokens preserving all whitespace and newlines
+  const tokens = text.split(/(\s+)/)
+  let charCursor = 0
+  let wordCount = 0
+  const parsed = tokens.map((part) => {
+    const start = charCursor
+    charCursor += part.length
+    const isWhitespace = /^\s+$/.test(part)
+    const wordIndex = isWhitespace ? -1 : wordCount++
+    return {
+      text: part,
+      isWhitespace,
+      startIndex: start,
+      endIndex: charCursor,
+      wordIndex,
+    }
+  })
+
+  const wordTokens = parsed.filter((t) => !t.isWhitespace)
+
+  return (
+    <div className="whitespace-pre-wrap leading-relaxed select-text">
+      {parsed.map((token, idx) => {
+        if (token.isWhitespace) {
+          return <span key={idx}>{token.text}</span>
+        }
+
+        const nextWord = wordTokens[token.wordIndex + 1]
+
+        const isCurrentWord =
+          (speakingCharIndex >= token.startIndex ||
+            (token.wordIndex === 0 && speakingCharIndex < token.startIndex)) &&
+          (nextWord ? speakingCharIndex < nextWord.startIndex : true)
+
+        const isPastWord =
+          speakingCharIndex >= (nextWord ? nextWord.startIndex : token.endIndex)
+
+        if (isCurrentWord) {
+          return (
+            <span
+              key={idx}
+              className="inline rounded-md px-1.5 py-0.5 font-bold bg-emerald-500 text-white dark:bg-emerald-400 dark:text-zinc-950 ring-2 ring-emerald-400/40 shadow-xs transition-all duration-100"
+            >
+              {token.text}
+            </span>
+          )
+        }
+
+        if (isPastWord) {
+          return (
+            <span key={idx} className="text-zinc-900 dark:text-zinc-100 font-medium">
+              {token.text}
+            </span>
+          )
+        }
+
+        return (
+          <span key={idx} className="text-zinc-500 dark:text-zinc-400">
+            {token.text}
+          </span>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function ChatHistory({
   messages,
   isThinking,
   speakingMessageId,
+  speakingCharIndex,
 }: ChatHistoryProps) {
   const endRef = useRef<HTMLDivElement>(null)
 
@@ -92,13 +173,11 @@ export default function ChatHistory({
                 </div>
               )}
 
-              <div
-                className={`whitespace-pre-wrap transition-all duration-300 ${
-                  isSpeaking ? 'text-zinc-900 dark:text-zinc-50 font-medium' : ''
-                }`}
-              >
-                {message.text}
-              </div>
+              <FormattedMessageText
+                text={message.text}
+                isSpeaking={isSpeaking}
+                speakingCharIndex={speakingCharIndex}
+              />
 
             {/* Inline Audio Player if Agent Speech is Available */}
             {message.audioUrl && message.role === 'agent' && (
