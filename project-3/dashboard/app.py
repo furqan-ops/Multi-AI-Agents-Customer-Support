@@ -37,60 +37,96 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ---------- 2026 Ultra-Modern Obsidian CSS & Scrollbars ----------
-st.markdown("""
+# ---------- Theme State & Dynamic Palette ----------
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "Dark Obsidian"
+
+is_dark = st.session_state.theme_mode == "Dark Obsidian"
+
+# Dynamic 2026 Obsidian vs Clean Light Palette Variables
+bg_app = "#080C14" if is_dark else "#F8FAFC"
+bg_card = "#111726" if is_dark else "#FFFFFF"
+bg_sidebar = "#080C14" if is_dark else "#FFFFFF"
+bg_tab_list = "#0D131F" if is_dark else "#F1F5F9"
+border_card = "rgba(255, 255, 255, 0.08)" if is_dark else "#E2E8F0"
+border_sidebar = "rgba(255, 255, 255, 0.06)" if is_dark else "#E2E8F0"
+text_primary = "#FFFFFF" if is_dark else "#0F172A"
+text_secondary = "#94A3B8" if is_dark else "#475569"
+text_muted = "#64748B" if is_dark else "#94A3B8"
+input_bg = "#111726" if is_dark else "#FFFFFF"
+input_border = "rgba(255, 255, 255, 0.12)" if is_dark else "#CBD5E1"
+input_color = "#F8FAFC" if is_dark else "#0F172A"
+chart_grid = "rgba(255, 255, 255, 0.06)" if is_dark else "#E2E8F0"
+chart_label = "#94A3B8" if is_dark else "#475569"
+card_shadow = "0 4px 20px -2px rgba(0, 0, 0, 0.4)" if is_dark else "0 4px 16px -2px rgba(15, 23, 42, 0.06)"
+card_shadow_hover = "0 8px 24px -4px rgba(139, 92, 246, 0.25)" if is_dark else "0 8px 24px -4px rgba(139, 92, 246, 0.18)"
+tab_selected_bg = "rgba(139, 92, 246, 0.25)" if is_dark else "#FFFFFF"
+tab_selected_border = "rgba(139, 92, 246, 0.45)" if is_dark else "#DDD6FE"
+tab_selected_color = "#FFFFFF" if is_dark else "#7C3AED"
+scroll_thumb = "rgba(255, 255, 255, 0.16)" if is_dark else "rgba(0, 0, 0, 0.15)"
+pill_neutral_bg = "rgba(148, 163, 184, 0.15)" if is_dark else "rgba(100, 116, 139, 0.10)"
+pill_neutral_text = "#CBD5E1" if is_dark else "#475569"
+pill_neutral_border = "rgba(148, 163, 184, 0.3)" if is_dark else "rgba(100, 116, 139, 0.2)"
+tab_hover_bg = "rgba(255, 255, 255, 0.05)" if is_dark else "rgba(0, 0, 0, 0.04)"
+
+# ---------- 2026 Adaptive Modern CSS & Scrollbars ----------
+st.markdown(f"""
 <style>
 /* Modern Typography */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-html, body, [class*="css"], .stApp {
+html, body, [class*="css"], .stApp {{
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-}
+}}
 
-code, kbd, samp, pre {
+code, kbd, samp, pre {{
     font-family: 'JetBrains Mono', monospace !important;
-}
+}}
 
-/* Force 2026 Dark Obsidian Foundation across the entire DOM */
+/* Dynamic Theme Foundation across the entire DOM */
 html, body, .stApp, 
 [data-testid="stAppViewContainer"], 
 [data-testid="stHeader"], 
-section[data-testid="stSidebar"], 
 .main, 
-.block-container {
-    background-color: #080C14 !important;
-    color: #F8FAFC !important;
-}
+.block-container {{
+    background-color: {bg_app} !important;
+    color: {text_primary} !important;
+}}
 
-.block-container {
+section[data-testid="stSidebar"] {{
+    background-color: {bg_sidebar} !important;
+    border-right: 1px solid {border_sidebar} !important;
+}}
+
+.block-container {{
     padding-top: 4.5rem !important;
     padding-bottom: 3.5rem !important;
     max-width: 1460px !important;
-}
+}}
 
-/* 2026 Sleek Ultra-Thin Minimalist Scrollbar */
-::-webkit-scrollbar {
+/* 2026 Sleek Minimalist Scrollbar */
+::-webkit-scrollbar {{
     width: 5px !important;
     height: 5px !important;
-}
-::-webkit-scrollbar-track {
+}}
+::-webkit-scrollbar-track {{
     background: transparent !important;
-}
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.16) !important;
+}}
+::-webkit-scrollbar-thumb {{
+    background: {scroll_thumb} !important;
     border-radius: 9999px !important;
-}
-::-webkit-scrollbar-thumb:hover {
+}}
+::-webkit-scrollbar-thumb:hover {{
     background: #8B5CF6 !important;
     box-shadow: 0 0 10px rgba(139, 92, 246, 0.6) !important;
-}
-* {
+}}
+* {{
     scrollbar-width: thin !important;
-    scrollbar-color: rgba(255, 255, 255, 0.16) transparent !important;
-}
+    scrollbar-color: {scroll_thumb} transparent !important;
+}}
 
 /* Pulsing Live Telemetry Beacon */
-.live-beacon {
+.live-beacon {{
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -103,87 +139,87 @@ section[data-testid="stSidebar"],
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-}
+}}
 
-.beacon-dot {
+.beacon-dot {{
     width: 8px;
     height: 8px;
     background-color: #10B981;
     border-radius: 50%;
     box-shadow: 0 0 10px #10B981;
     animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
+}}
 
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.35; transform: scale(0.85); }
-}
+@keyframes pulse-dot {{
+    0%, 100% {{ opacity: 1; transform: scale(1); }}
+    50% {{ opacity: 0.35; transform: scale(0.85); }}
+}}
 
 /* Bento Card Component */
-.bento-card {
-    background: #111726;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+.bento-card {{
+    background: {bg_card} !important;
+    border: 1px solid {border_card} !important;
     border-radius: 12px;
     padding: 16px 20px;
     margin-bottom: 12px;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
-}
+    box-shadow: {card_shadow} !important;
+}}
 
-.bento-card:hover {
+.bento-card:hover {{
     transform: translateY(-2px);
-    border-color: rgba(139, 92, 246, 0.4);
-    box-shadow: 0 8px 24px -4px rgba(139, 92, 246, 0.15);
-}
+    border-color: rgba(139, 92, 246, 0.4) !important;
+    box-shadow: {card_shadow_hover} !important;
+}}
 
-.bento-header {
+.bento-header {{
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
-}
+}}
 
-.bento-title {
-    color: #94A3B8;
+.bento-title {{
+    color: {text_secondary} !important;
     font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-}
+}}
 
-.bento-dot {
+.bento-dot {{
     width: 8px;
     height: 8px;
     border-radius: 50%;
-}
-.dot-blue   { background-color: #38BDF8; box-shadow: 0 0 8px #38BDF8; }
-.dot-green  { background-color: #10B981; box-shadow: 0 0 8px #10B981; }
-.dot-purple { background-color: #8B5CF6; box-shadow: 0 0 8px #8B5CF6; }
-.dot-orange { background-color: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
-.dot-red    { background-color: #F43F5E; box-shadow: 0 0 8px #F43F5E; }
-.dot-cyan   { background-color: #06B6D4; box-shadow: 0 0 8px #06B6D4; }
+}}
+.dot-blue   {{ background-color: #38BDF8; box-shadow: 0 0 8px #38BDF8; }}
+.dot-green  {{ background-color: #10B981; box-shadow: 0 0 8px #10B981; }}
+.dot-purple {{ background-color: #8B5CF6; box-shadow: 0 0 8px #8B5CF6; }}
+.dot-orange {{ background-color: #F59E0B; box-shadow: 0 0 8px #F59E0B; }}
+.dot-red    {{ background-color: #F43F5E; box-shadow: 0 0 8px #F43F5E; }}
+.dot-cyan   {{ background-color: #06B6D4; box-shadow: 0 0 8px #06B6D4; }}
 
-.bento-value {
-    color: #FFFFFF;
+.bento-value {{
+    color: {text_primary} !important;
     font-size: 1.85rem;
     font-weight: 800;
     letter-spacing: -0.02em;
     line-height: 1.35 !important;
     margin-bottom: 8px;
     overflow: visible !important;
-}
+}}
 
-.bento-footer {
+.bento-footer {{
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #94A3B8;
+    color: {text_secondary} !important;
     font-size: 0.78rem;
     line-height: 1.4 !important;
     overflow: visible !important;
-}
+}}
 
-.pill-tag {
+.pill-tag {{
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -192,83 +228,78 @@ section[data-testid="stSidebar"],
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.02em;
-}
-.pill-optimal { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
-.pill-warning { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
-.pill-danger  { background: rgba(244, 63, 94, 0.15); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.3); }
-.pill-neutral { background: rgba(148, 163, 184, 0.15); color: #CBD5E1; border: 1px solid rgba(148, 163, 184, 0.3); }
+}}
+.pill-optimal {{ background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); }}
+.pill-warning {{ background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }}
+.pill-danger  {{ background: rgba(244, 63, 94, 0.15); color: #F43F5E; border: 1px solid rgba(244, 63, 94, 0.3); }}
+.pill-neutral {{ background: {pill_neutral_bg}; color: {pill_neutral_text}; border: 1px solid {pill_neutral_border}; }}
 
-/* Glass Containers */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    background: #111726 !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+/* Glass / Card Containers */
+div[data-testid="stVerticalBlockBorderWrapper"] {{
+    background: {bg_card} !important;
+    border: 1px solid {border_card} !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3) !important;
-}
+    box-shadow: {card_shadow} !important;
+}}
 
 /* Modern Tab Pills */
-div[data-baseweb="tab-list"] {
-    background: #0D131F !important;
+div[data-baseweb="tab-list"] {{
+    background: {bg_tab_list} !important;
     padding: 4px !important;
     border-radius: 10px !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid {border_card} !important;
     gap: 4px !important;
     margin-bottom: 20px !important;
-}
-button[data-baseweb="tab"] {
+}}
+button[data-baseweb="tab"] {{
     background: transparent !important;
     border: none !important;
-    color: #94A3B8 !important;
+    color: {text_secondary} !important;
     font-size: 0.88rem !important;
     font-weight: 600 !important;
     padding: 8px 18px !important;
     border-radius: 8px !important;
     transition: all 0.2s ease !important;
-}
-button[data-baseweb="tab"]:hover {
-    color: #FFFFFF !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-}
-button[data-baseweb="tab"][aria-selected="true"] {
-    color: #FFFFFF !important;
-    background: rgba(139, 92, 246, 0.25) !important;
-    border: 1px solid rgba(139, 92, 246, 0.45) !important;
+}}
+button[data-baseweb="tab"]:hover {{
+    color: {text_primary} !important;
+    background: {tab_hover_bg} !important;
+}}
+button[data-baseweb="tab"][aria-selected="true"] {{
+    color: {tab_selected_color} !important;
+    background: {tab_selected_bg} !important;
+    border: 1px solid {tab_selected_border} !important;
     box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2) !important;
-}
-div[data-baseweb="tab-highlight"], div[data-baseweb="tab-border"] {
+}}
+div[data-baseweb="tab-highlight"], div[data-baseweb="tab-border"] {{
     display: none !important;
-}
-
-/* Sidebar Modern 2026 Design */
-section[data-testid="stSidebar"] {
-    border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
-}
+}}
 
 /* Modern Input and Select Controls */
-div[data-baseweb="select"] > div {
-    background-color: #111726 !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
+div[data-baseweb="select"] > div {{
+    background-color: {input_bg} !important;
+    border-color: {input_border} !important;
     border-radius: 8px !important;
-    color: #F8FAFC !important;
-}
-input {
-    background-color: #111726 !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    color: #F8FAFC !important;
+    color: {input_color} !important;
+}}
+input {{
+    background-color: {input_bg} !important;
+    border-color: {input_border} !important;
+    color: {input_color} !important;
     border-radius: 8px !important;
-}
-button[kind="secondary"] {
-    background-color: #111726 !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: #F8FAFC !important;
+}}
+button[kind="secondary"] {{
+    background-color: {input_bg} !important;
+    border: 1px solid {input_border} !important;
+    color: {input_color} !important;
     border-radius: 8px !important;
     font-weight: 600 !important;
-}
-button[kind="secondary"]:hover {
+}}
+button[kind="secondary"]:hover {{
     border-color: #8B5CF6 !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.3) !important;
-}
+    color: #8B5CF6 !important;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2) !important;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -474,6 +505,21 @@ alerts_df = load_alerts()
 
 # ---------- Sidebar Governance & Controls ----------
 with st.sidebar:
+    st.markdown("### :material/palette: Appearance")
+    theme_choice = st.radio(
+        "Theme Mode",
+        options=["🌙 Dark Obsidian", "☀️ Clean Light"],
+        index=0 if st.session_state.theme_mode == "Dark Obsidian" else 1,
+        horizontal=True,
+        label_visibility="collapsed",
+        key="app_theme_toggle_radio"
+    )
+    if theme_choice != st.session_state.theme_mode:
+        st.session_state.theme_mode = theme_choice
+        st.rerun()
+
+    st.divider()
+
     st.markdown("### :material/shield: Governance Engine")
     st.caption("Autonomous Multi-Agent Observability Cluster")
     
@@ -585,12 +631,12 @@ if not guard.empty and "created_at" in guard.columns:
 # ---------- Dashboard Header ----------
 h_col1, h_col2 = st.columns([0.72, 0.28], vertical_alignment="center")
 with h_col1:
-    st.html("""
+    st.html(f"""
     <div style="padding-top: 10px; margin-bottom: 14px;">
-        <h1 style="color: #FFFFFF; font-size: 2.25rem; font-weight: 800; line-height: 1.35; margin: 0 0 6px 0; letter-spacing: -0.02em;">
+        <h1 style="color: {text_primary}; font-size: 2.25rem; font-weight: 800; line-height: 1.35; margin: 0 0 6px 0; letter-spacing: -0.02em;">
             Multi-Agent Performance &amp; Cost Governance Center
         </h1>
-        <div style="color: #94A3B8; font-size: 0.92rem; font-weight: 400; line-height: 1.4;">
+        <div style="color: {text_secondary}; font-size: 0.92rem; font-weight: 400; line-height: 1.4;">
             Autonomous AI Operations • Real-time Telemetry, Guardrails, Latency Analytics, &amp; Cost Governance
         </div>
     </div>
@@ -739,7 +785,7 @@ with hero_left:
 with hero_right:
     # Top Hero Chart: Total LLMs Cost & Token Distribution (Runagent Style)
     with st.container(border=True):
-        st.markdown("<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;'><span style='color: #F8FAFC; font-weight: 700; font-size: 1rem;'>Total LLMs Cost & Token Telemetry</span><span style='color: #94A3B8; font-size: 0.78rem;'>Stacked by Day</span></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;'><span style='color: {text_primary}; font-weight: 700; font-size: 1rem;'>Total LLMs Cost & Token Telemetry</span><span style='color: {text_secondary}; font-size: 0.78rem;'>Stacked by Day</span></div>", unsafe_allow_html=True)
         st.caption("Prompt vs Completion token velocity with cumulative USD expenditure trajectory")
 
         if not usage.empty and "created_at" in usage.columns:
@@ -763,11 +809,11 @@ with hero_right:
                 cornerRadiusTopLeft=5,
                 cornerRadiusTopRight=5
             ).encode(
-                x=alt.X("date_str:N", title=None, axis=alt.Axis(labelColor="#94A3B8", labelAngle=0, tickColor="transparent", domain=False)),
-                y=alt.Y("Tokens:Q", title=None, stack="zero", axis=alt.Axis(labelColor="#94A3B8", gridColor="rgba(255,255,255,0.05)", domain=False, tickColor="transparent")),
+                x=alt.X("date_str:N", title=None, axis=alt.Axis(labelColor=chart_label, labelAngle=0, tickColor="transparent", domain=False)),
+                y=alt.Y("Tokens:Q", title=None, stack="zero", axis=alt.Axis(labelColor=chart_label, gridColor=chart_grid, domain=False, tickColor="transparent")),
                 color=alt.Color("Token_Type:N", 
                                 scale=alt.Scale(domain=["prompt_tokens", "completion_tokens"], range=["#06B6D4", "#8B5CF6"]),
-                                legend=alt.Legend(orient="top-right", labelColor="#94A3B8", title=None, symbolType="circle")),
+                                legend=alt.Legend(orient="top-right", labelColor=chart_label, title=None, symbolType="circle")),
                 tooltip=[
                     alt.Tooltip("date_str:N", title="Date"),
                     alt.Tooltip("Token_Type:N", title="Type"),
@@ -801,16 +847,16 @@ with st.container(border=True):
     with b1:
         st.html(f"""
         <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">DAILY SPEND</span>
-            <span><b style="color: #FFFFFF; font-size: 0.88rem;">${today_cost:.4f}</b> <span style="color: #64748B;">/ ${daily_limit:.2f}</span></span>
+            <span style="color: {text_secondary}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">DAILY SPEND</span>
+            <span><b style="color: {text_primary}; font-size: 0.88rem;">${today_cost:.4f}</b> <span style="color: {text_muted};">/ ${daily_limit:.2f}</span></span>
         </div>
         """)
         st.progress(daily_pct)
     with b2:
         st.html(f"""
         <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">MONTHLY SPEND</span>
-            <span><b style="color: #FFFFFF; font-size: 0.88rem;">${month_cost:.4f}</b> <span style="color: #64748B;">/ ${monthly_limit:.2f}</span></span>
+            <span style="color: {text_secondary}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">MONTHLY SPEND</span>
+            <span><b style="color: {text_primary}; font-size: 0.88rem;">${month_cost:.4f}</b> <span style="color: {text_muted};">/ ${monthly_limit:.2f}</span></span>
         </div>
         """)
         st.progress(monthly_pct)
@@ -819,8 +865,8 @@ with st.container(border=True):
         esc_pct = min(esc_rate / max_esc, 1.0) if max_esc > 0 else 0.0
         st.html(f"""
         <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">ESCALATION CEILING</span>
-            <span><b style="color: #FFFFFF; font-size: 0.88rem;">{esc_rate:.1%}</b> <span style="color: #64748B;">/ {max_esc:.0%} Max</span></span>
+            <span style="color: {text_secondary}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">ESCALATION CEILING</span>
+            <span><b style="color: {text_primary}; font-size: 0.88rem;">{esc_rate:.1%}</b> <span style="color: {text_muted};">/ {max_esc:.0%} Max</span></span>
         </div>
         """)
         st.progress(esc_pct)
@@ -829,8 +875,8 @@ with st.container(border=True):
         conf_pct = min(avg_conf, 1.0)
         st.html(f"""
         <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">CONFIDENCE SLA</span>
-            <span><b style="color: #FFFFFF; font-size: 0.88rem;">{avg_conf:.1%}</b> <span style="color: #64748B;">(Min: {min_conf:.0%})</span></span>
+            <span style="color: {text_secondary}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">CONFIDENCE SLA</span>
+            <span><b style="color: {text_primary}; font-size: 0.88rem;">{avg_conf:.1%}</b> <span style="color: {text_muted};">(Min: {min_conf:.0%})</span></span>
         </div>
         """)
         st.progress(conf_pct)
@@ -849,7 +895,7 @@ tab_feed, tab_analytics, tab_security, tab_alerts = st.tabs([
 # TAB 1: Live Agent Run Feed (Runagent Style)
 # ==========================================
 with tab_feed:
-    st.markdown("<h4 style='color: #FFFFFF; font-weight: 700; margin-bottom: 2px;'>Live Agent Run Feed & Traces</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='color: {text_primary}; font-weight: 700; margin-bottom: 2px;'>Live Agent Run Feed & Traces</h4>", unsafe_allow_html=True)
     st.caption("Inspect live session traces, agent intent classification, confidence scores, and token costs")
 
     # Search & Filter bar
@@ -926,7 +972,7 @@ with tab_feed:
 # TAB 2: Agent & Model Cost Analytics
 # ==========================================
 with tab_analytics:
-    st.markdown("<h4 style='color: #FFFFFF; font-weight: 700; margin-bottom: 2px;'>Agent Cost & Model Telemetry</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='color: {text_primary}; font-weight: 700; margin-bottom: 2px;'>Agent Cost & Model Telemetry</h4>", unsafe_allow_html=True)
     st.caption("Granular cost distribution across autonomous agents and model token consumption")
 
     if not usage.empty and "created_at" in usage.columns:
@@ -934,15 +980,15 @@ with tab_analytics:
         
         with col_ag:
             with st.container(border=True):
-                st.markdown("<span style='color: #F8FAFC; font-weight: 700;'>Cost Distribution by Agent ($ USD)</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: {text_primary}; font-weight: 700;'>Cost Distribution by Agent ($ USD)</span>", unsafe_allow_html=True)
                 if "agent" in usage.columns:
                     agent_cost = usage.groupby("agent")["cost_usd"].sum().reset_index().sort_values("cost_usd", ascending=False)
                     agent_chart = alt.Chart(agent_cost).mark_bar(
                         cornerRadiusTopRight=5,
                         cornerRadiusBottomRight=5
                     ).encode(
-                        x=alt.X("cost_usd:Q", title="Spend ($ USD)", axis=alt.Axis(labelColor="#94A3B8", gridColor="rgba(255,255,255,0.05)", domain=False, tickColor="transparent")),
-                        y=alt.Y("agent:N", sort="-x", title=None, axis=alt.Axis(labelColor="#94A3B8", domain=False, tickColor="transparent")),
+                        x=alt.X("cost_usd:Q", title="Spend ($ USD)", axis=alt.Axis(labelColor=chart_label, titleColor=chart_label, gridColor=chart_grid, domain=False, tickColor="transparent")),
+                        y=alt.Y("agent:N", sort="-x", title=None, axis=alt.Axis(labelColor=chart_label, domain=False, tickColor="transparent")),
                         color=alt.Color("cost_usd:Q", legend=None, scale=alt.Scale(range=["#38BDF8", "#8B5CF6"])),
                         tooltip=[
                             alt.Tooltip("agent:N", title="Agent"),
@@ -953,15 +999,15 @@ with tab_analytics:
 
         with col_mod:
             with st.container(border=True):
-                st.markdown("<span style='color: #F8FAFC; font-weight: 700;'>Token Volume by Foundation Model</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: {text_primary}; font-weight: 700;'>Token Volume by Foundation Model</span>", unsafe_allow_html=True)
                 if "model" in usage.columns:
                     model_tokens = usage.groupby("model")["total_tokens"].sum().reset_index().sort_values("total_tokens", ascending=False)
                     model_chart = alt.Chart(model_tokens).mark_bar(
                         cornerRadiusTopRight=5,
                         cornerRadiusBottomRight=5
                     ).encode(
-                        x=alt.X("total_tokens:Q", title="Total Tokens", axis=alt.Axis(labelColor="#94A3B8", gridColor="rgba(255,255,255,0.05)", domain=False, tickColor="transparent")),
-                        y=alt.Y("model:N", sort="-x", title=None, axis=alt.Axis(labelColor="#94A3B8", domain=False, tickColor="transparent")),
+                        x=alt.X("total_tokens:Q", title="Total Tokens", axis=alt.Axis(labelColor=chart_label, titleColor=chart_label, gridColor=chart_grid, domain=False, tickColor="transparent")),
+                        y=alt.Y("model:N", sort="-x", title=None, axis=alt.Axis(labelColor=chart_label, domain=False, tickColor="transparent")),
                         color=alt.Color("total_tokens:Q", legend=None, scale=alt.Scale(range=["#06B6D4", "#10B981"])),
                         tooltip=[
                             alt.Tooltip("model:N", title="Model"),
@@ -972,7 +1018,7 @@ with tab_analytics:
 
         # Cumulative Cost Area Chart
         with st.container(border=True):
-            st.markdown("<span style='color: #F8FAFC; font-weight: 700;'>Financial Spend Trajectory ($ USD)</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color: {text_primary}; font-weight: 700;'>Financial Spend Trajectory ($ USD)</span>", unsafe_allow_html=True)
             usage_resampled = usage.copy()
             usage_resampled["date_str"] = usage_resampled["created_at"].dt.strftime("%b %d")
             cost_daily = usage_resampled.groupby("date_str", sort=False)["cost_usd"].sum().reset_index().tail(14)
@@ -988,8 +1034,8 @@ with tab_analytics:
                     x1=1, x2=1, y1=1, y2=0
                 )
             ).encode(
-                x=alt.X("date_str:N", title=None, axis=alt.Axis(labelAngle=0, labelColor="#94A3B8", domain=False, tickColor="transparent")),
-                y=alt.Y("cost_usd:Q", title="Spend ($ USD)", axis=alt.Axis(labelColor="#94A3B8", gridColor="rgba(255,255,255,0.05)", domain=False, tickColor="transparent")),
+                x=alt.X("date_str:N", title=None, axis=alt.Axis(labelAngle=0, labelColor=chart_label, domain=False, tickColor="transparent")),
+                y=alt.Y("cost_usd:Q", title="Spend ($ USD)", axis=alt.Axis(labelColor=chart_label, titleColor=chart_label, gridColor=chart_grid, domain=False, tickColor="transparent")),
                 tooltip=[
                     alt.Tooltip("date_str:N", title="Date"),
                     alt.Tooltip("cost_usd:Q", title="Spend ($)", format="$.4f")
@@ -1004,14 +1050,14 @@ with tab_analytics:
 # TAB 3: Guardrail & Safety Telemetry
 # ==========================================
 with tab_security:
-    st.markdown("<h4 style='color: #FFFFFF; font-weight: 700; margin-bottom: 2px;'>Autonomous Guardrail & Security Telemetry</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='color: {text_primary}; font-weight: 700; margin-bottom: 2px;'>Autonomous Guardrail & Security Telemetry</h4>", unsafe_allow_html=True)
     st.caption("Active interception of prompt injections, PII leaks, low-confidence responses, and policy deviations")
 
     if not guard.empty:
         g_c1, g_c2 = st.columns(2, gap="medium")
         with g_c1:
             with st.container(border=True):
-                st.markdown("<span style='color: #F8FAFC; font-weight: 700;'>Interceptions by Policy Event Type</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: {text_primary}; font-weight: 700;'>Interceptions by Policy Event Type</span>", unsafe_allow_html=True)
                 if "event_type" in guard.columns:
                     ev_counts = guard["event_type"].value_counts().reset_index()
                     ev_counts.columns = ["event_type", "count"]
@@ -1019,8 +1065,8 @@ with tab_security:
                         cornerRadiusTopRight=5,
                         cornerRadiusBottomRight=5
                     ).encode(
-                        x=alt.X("count:Q", title="Event Count", axis=alt.Axis(labelColor="#94A3B8", gridColor="rgba(255,255,255,0.05)", domain=False, tickColor="transparent")),
-                        y=alt.Y("event_type:N", sort="-x", title=None, axis=alt.Axis(labelColor="#94A3B8", domain=False, tickColor="transparent")),
+                        x=alt.X("count:Q", title="Event Count", axis=alt.Axis(labelColor=chart_label, titleColor=chart_label, gridColor=chart_grid, domain=False, tickColor="transparent")),
+                        y=alt.Y("event_type:N", sort="-x", title=None, axis=alt.Axis(labelColor=chart_label, domain=False, tickColor="transparent")),
                         color=alt.Color("event_type:N", legend=None, scale=alt.Scale(range=["#F43F5E", "#8B5CF6", "#06B6D4", "#F59E0B"])),
                         tooltip=[alt.Tooltip("event_type:N", title="Policy"), alt.Tooltip("count:Q", title="Interceptions")]
                     ).properties(height=200).configure_view(strokeWidth=0).configure(background="transparent")
@@ -1028,7 +1074,7 @@ with tab_security:
 
         with g_c2:
             with st.container(border=True):
-                st.markdown("<span style='color: #F8FAFC; font-weight: 700;'>Threat Severity Distribution</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: {text_primary}; font-weight: 700;'>Threat Severity Distribution</span>", unsafe_allow_html=True)
                 if "severity" in guard.columns:
                     sev_counts = guard["severity"].value_counts().reset_index()
                     sev_counts.columns = ["severity", "count"]
@@ -1036,8 +1082,8 @@ with tab_security:
                         cornerRadiusTopRight=5,
                         cornerRadiusBottomRight=5
                     ).encode(
-                        x=alt.X("count:Q", title="Count", axis=alt.Axis(labelColor="#94A3B8", gridColor="rgba(255,255,255,0.05)", domain=False, tickColor="transparent")),
-                        y=alt.Y("severity:N", sort="-x", title=None, axis=alt.Axis(labelColor="#94A3B8", domain=False, tickColor="transparent")),
+                        x=alt.X("count:Q", title="Count", axis=alt.Axis(labelColor=chart_label, titleColor=chart_label, gridColor=chart_grid, domain=False, tickColor="transparent")),
+                        y=alt.Y("severity:N", sort="-x", title=None, axis=alt.Axis(labelColor=chart_label, domain=False, tickColor="transparent")),
                         color=alt.Color("severity:N", legend=None,
                                         scale=alt.Scale(domain=["critical", "warning", "info"],
                                                         range=["#F43F5E", "#F59E0B", "#38BDF8"])),
@@ -1045,7 +1091,7 @@ with tab_security:
                     ).properties(height=200).configure_view(strokeWidth=0).configure(background="transparent")
                     st.altair_chart(sev_chart, width="stretch")
 
-        st.markdown("<h5 style='color: #FFFFFF; font-weight: 700; margin-top: 16px;'>Recent Intercepted Security Events</h5>", unsafe_allow_html=True)
+        st.markdown(f"<h5 style='color: {text_primary}; font-weight: 700; margin-top: 16px;'>Recent Intercepted Security Events</h5>", unsafe_allow_html=True)
         g_cols = ["request_id", "agent", "event_type", "severity", "details", "created_at"]
         existing_g_cols = [c for c in g_cols if c in guard.columns]
         
@@ -1068,7 +1114,7 @@ with tab_security:
 # TAB 4: Incident & Alert Governance
 # ==========================================
 with tab_alerts:
-    st.markdown("<h4 style='color: #FFFFFF; font-weight: 700; margin-bottom: 2px;'>Real-Time Incident & Alert Governance</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='color: {text_primary}; font-weight: 700; margin-bottom: 2px;'>Real-Time Incident & Alert Governance</h4>", unsafe_allow_html=True)
     st.caption("Active threshold alerts, automated budget ceiling breaches, and operator acknowledgement workflows")
 
     if alerts_df.empty:
@@ -1102,7 +1148,7 @@ with tab_alerts:
             """)
 
         st.space("small")
-        st.markdown("<h5 style='color: #FFFFFF; font-weight: 700;'>Live Incident Resolution Queue</h5>", unsafe_allow_html=True)
+        st.markdown(f"<h5 style='color: {text_primary}; font-weight: 700;'>Live Incident Resolution Queue</h5>", unsafe_allow_html=True)
 
         for _, row in alerts_df.head(25).iterrows():
             sev = str(row.get("severity", "info")).lower()
