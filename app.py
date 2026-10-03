@@ -38,10 +38,10 @@ st.set_page_config(
 )
 
 # ---------- Theme State & Dynamic Palette ----------
-if "theme_mode" not in st.session_state:
-    st.session_state.theme_mode = "Dark Obsidian"
+if "is_light_mode" not in st.session_state:
+    st.session_state.is_light_mode = False
 
-is_dark = st.session_state.theme_mode == "Dark Obsidian"
+is_dark = not st.session_state.is_light_mode
 
 # Dynamic 2026 Obsidian vs Clean Light Palette Variables
 bg_app = "#080C14" if is_dark else "#F8FAFC"
@@ -68,10 +68,19 @@ pill_neutral_bg = "rgba(148, 163, 184, 0.15)" if is_dark else "rgba(100, 116, 13
 pill_neutral_text = "#CBD5E1" if is_dark else "#475569"
 pill_neutral_border = "rgba(148, 163, 184, 0.3)" if is_dark else "rgba(100, 116, 139, 0.2)"
 tab_hover_bg = "rgba(255, 255, 255, 0.05)" if is_dark else "rgba(0, 0, 0, 0.04)"
+df_canvas_filter = "" if is_dark else "div[data-testid=\"stDataFrame\"] canvas { filter: invert(0.92) hue-rotate(180deg) !important; }"
 
 # ---------- 2026 Adaptive Modern CSS & Scrollbars ----------
 st.markdown(f"""
 <style>
+/* Dynamic Root Variables */
+:root {{
+    --primary-color: #8B5CF6 !important;
+    --background-color: {bg_app} !important;
+    --secondary-background-color: {bg_card} !important;
+    --text-color: {text_primary} !important;
+}}
+
 /* Modern Typography */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -93,9 +102,55 @@ html, body, .stApp,
     color: {text_primary} !important;
 }}
 
+/* High Contrast Sidebar Styling */
 section[data-testid="stSidebar"] {{
     background-color: {bg_sidebar} !important;
     border-right: 1px solid {border_sidebar} !important;
+}}
+
+section[data-testid="stSidebar"],
+section[data-testid="stSidebar"] * {{
+    color: {text_primary};
+}}
+
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] div,
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] h4,
+section[data-testid="stSidebar"] h5,
+section[data-testid="stSidebar"] h6 {{
+    color: {text_primary} !important;
+}}
+
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p,
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] span,
+section[data-testid="stSidebar"] small {{
+    color: {text_secondary} !important;
+    font-weight: 500 !important;
+}}
+
+section[data-testid="stSidebar"] hr {{
+    border-color: {border_sidebar} !important;
+}}
+
+/* High-Contrast Toggle Switch Component */
+div[data-testid="stToggle"] {{
+    background: {"rgba(255, 255, 255, 0.04)" if is_dark else "#F1F5F9"} !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+    border: 1px solid {border_card} !important;
+    margin-bottom: 12px !important;
+}}
+
+div[data-testid="stToggle"] label p,
+div[data-testid="stToggle"] label span {{
+    color: {text_primary} !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
 }}
 
 .block-container {{
@@ -155,13 +210,17 @@ section[data-testid="stSidebar"] {{
     50% {{ opacity: 0.35; transform: scale(0.85); }}
 }}
 
-/* Bento Card Component */
+/* Unified Bento Card Component - Harmonious 2026 Proportions */
 .bento-card {{
     background: {bg_card} !important;
     border: 1px solid {border_card} !important;
     border-radius: 12px;
-    padding: 16px 20px;
+    padding: 16px 18px !important;
     margin-bottom: 12px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     box-shadow: {card_shadow} !important;
 }}
@@ -176,21 +235,25 @@ section[data-testid="stSidebar"] {{
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }}
 
 .bento-title {{
     color: {text_secondary} !important;
-    font-size: 0.78rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }}
 
 .bento-dot {{
     width: 8px;
     height: 8px;
     border-radius: 50%;
+    flex-shrink: 0;
 }}
 .dot-blue   {{ background-color: #38BDF8; box-shadow: 0 0 8px #38BDF8; }}
 .dot-green  {{ background-color: #10B981; box-shadow: 0 0 8px #10B981; }}
@@ -201,12 +264,11 @@ section[data-testid="stSidebar"] {{
 
 .bento-value {{
     color: {text_primary} !important;
-    font-size: 1.85rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.35 !important;
-    margin-bottom: 8px;
-    overflow: visible !important;
+    font-size: 1.60rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.2 !important;
+    margin: 2px 0 4px 0 !important;
 }}
 
 .bento-footer {{
@@ -214,9 +276,9 @@ section[data-testid="stSidebar"] {{
     align-items: center;
     gap: 6px;
     color: {text_secondary} !important;
-    font-size: 0.78rem;
-    line-height: 1.4 !important;
-    overflow: visible !important;
+    font-size: 0.74rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
 }}
 
 .pill-tag {{
@@ -228,6 +290,7 @@ section[data-testid="stSidebar"] {{
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.02em;
+    white-space: nowrap;
 }}
 .pill-optimal {{ background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); }}
 .pill-warning {{ background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }}
@@ -276,22 +339,35 @@ div[data-baseweb="tab-highlight"], div[data-baseweb="tab-border"] {{
 }}
 
 /* Modern Input and Select Controls */
-div[data-baseweb="select"] > div {{
-    background-color: {input_bg} !important;
-    border-color: {input_border} !important;
-    border-radius: 8px !important;
-    color: {input_color} !important;
-}}
+div[data-baseweb="select"] > div,
+div[data-baseweb="input"],
 input {{
     background-color: {input_bg} !important;
     border-color: {input_border} !important;
     color: {input_color} !important;
     border-radius: 8px !important;
 }}
+input::placeholder {{
+    color: {text_secondary} !important;
+}}
+div[data-baseweb="select"] span {{
+    color: {input_color} !important;
+}}
+div[data-baseweb="select"] * {{
+    color: {input_color} !important;
+}}
+ul[data-baseweb="menu"] {{
+    background-color: {bg_card} !important;
+    border: 1px solid {border_card} !important;
+}}
+ul[data-baseweb="menu"] li {{
+    color: {text_primary} !important;
+}}
+
 button[kind="secondary"] {{
     background-color: {input_bg} !important;
     border: 1px solid {input_border} !important;
-    color: {input_color} !important;
+    color: {text_primary} !important;
     border-radius: 8px !important;
     font-weight: 600 !important;
 }}
@@ -299,6 +375,44 @@ button[kind="secondary"]:hover {{
     border-color: #8B5CF6 !important;
     color: #8B5CF6 !important;
     box-shadow: 0 0 12px rgba(139, 92, 246, 0.2) !important;
+}}
+button[kind="secondary"] p,
+button[kind="secondary"] span {{
+    color: {text_primary} !important;
+}}
+
+/* Clean Modern Progress Bars */
+div[data-testid="stProgress"] {{
+    background: transparent !important;
+}}
+div[data-testid="stProgress"] > div {{
+    background-color: {"rgba(255, 255, 255, 0.12)" if is_dark else "#E2E8F0"} !important;
+    height: 7px !important;
+    border-radius: 9999px !important;
+    overflow: hidden !important;
+}}
+div[data-testid="stProgress"] > div > div {{
+    background: linear-gradient(90deg, #8B5CF6, #38BDF8) !important;
+    height: 7px !important;
+    border-radius: 9999px !important;
+}}
+
+/* Dataframe and Tables */
+div[data-testid="stDataFrame"] {{
+    background: {bg_card} !important;
+    border: 1px solid {border_card} !important;
+    border-radius: 10px !important;
+}}
+{df_canvas_filter}
+
+/* Expanders */
+div[data-testid="stExpander"] {{
+    background: {bg_card} !important;
+    border: 1px solid {border_card} !important;
+    border-radius: 10px !important;
+}}
+div[data-testid="stExpander"] details summary span {{
+    color: {text_primary} !important;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -506,17 +620,11 @@ alerts_df = load_alerts()
 # ---------- Sidebar Governance & Controls ----------
 with st.sidebar:
     st.markdown("### :material/palette: Appearance")
-    theme_choice = st.radio(
-        "Theme Mode",
-        options=["🌙 Dark Obsidian", "☀️ Clean Light"],
-        index=0 if st.session_state.theme_mode == "Dark Obsidian" else 1,
-        horizontal=True,
-        label_visibility="collapsed",
-        key="app_theme_toggle_radio"
+    st.toggle(
+        "☀️ Clean Light Theme",
+        key="is_light_mode",
+        help="Switch between Dark Obsidian and Clean Light UI"
     )
-    if theme_choice != st.session_state.theme_mode:
-        st.session_state.theme_mode = theme_choice
-        st.rerun()
 
     st.divider()
 
@@ -693,7 +801,7 @@ with hero_left:
         st.html(f"""
         <div class="bento-card">
             <div class="bento-header">
-                <span class="bento-title">Total Runs / Conv</span>
+                <span class="bento-title">Total Agent Runs</span>
                 <span class="bento-dot dot-cyan"></span>
             </div>
             <div class="bento-value">{total_conv:,}</div>
@@ -725,7 +833,7 @@ with hero_left:
         st.html(f"""
         <div class="bento-card">
             <div class="bento-header">
-                <span class="bento-title">Total Cost ($ USD)</span>
+                <span class="bento-title">Total Spend</span>
                 <span class="bento-dot dot-purple"></span>
             </div>
             <div class="bento-value">${total_cost:.4f}</div>
@@ -753,31 +861,33 @@ with hero_left:
         </div>
         """)
 
-    # Secondary Sub-Row: LLM Calls & Guardrails
+    # Secondary Sub-Row: LLM Calls & Guardrails (Standardized uniform card styling)
     b_r3_c1, b_r3_c2 = st.columns(2)
     with b_r3_c1:
         st.html(f"""
-        <div class="bento-card" style="padding: 12px 18px; margin-bottom: 0px;">
-            <div class="bento-header" style="margin-bottom: 4px;">
+        <div class="bento-card">
+            <div class="bento-header">
                 <span class="bento-title">LLM API Calls</span>
                 <span class="bento-dot dot-blue"></span>
             </div>
-            <div class="bento-value" style="font-size: 1.4rem; margin-bottom: 2px;">{total_calls:,}</div>
+            <div class="bento-value">{total_calls:,}</div>
             <div class="bento-footer">
-                <span>{(total_tokens/1000):.1f}k tokens consumed</span>
+                <span class="pill-tag pill-neutral">{(total_tokens/1000):.1f}k tokens</span>
+                <span>Consumed</span>
             </div>
         </div>
         """)
     with b_r3_c2:
         st.html(f"""
-        <div class="bento-card" style="padding: 12px 18px; margin-bottom: 0px;">
-            <div class="bento-header" style="margin-bottom: 4px;">
+        <div class="bento-card">
+            <div class="bento-header">
                 <span class="bento-title">Guardrail Blocks</span>
                 <span class="bento-dot dot-red"></span>
             </div>
-            <div class="bento-value" style="font-size: 1.4rem; margin-bottom: 2px;">{total_guard_events:,}</div>
+            <div class="bento-value">{total_guard_events:,}</div>
             <div class="bento-footer">
                 <span class="pill-tag pill-optimal">Shield Active</span>
+                <span>Intercepted</span>
             </div>
         </div>
         """)
@@ -846,17 +956,17 @@ with st.container(border=True):
     b1, b2, b3, b4 = st.columns(4)
     with b1:
         st.html(f"""
-        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: {text_secondary}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">DAILY SPEND</span>
-            <span><b style="color: {text_primary}; font-size: 0.88rem;">${today_cost:.4f}</b> <span style="color: {text_muted};">/ ${daily_limit:.2f}</span></span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.74rem; margin-bottom: 6px; white-space: nowrap;">
+            <span style="color: {text_secondary}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">DAILY SPEND</span>
+            <span style="white-space: nowrap;"><b style="color: {text_primary}; font-size: 0.84rem;">${today_cost:.4f}</b> <span style="color: {text_muted}; font-size: 0.72rem;">/ ${daily_limit:.2f}</span></span>
         </div>
         """)
         st.progress(daily_pct)
     with b2:
         st.html(f"""
-        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: {text_secondary}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">MONTHLY SPEND</span>
-            <span><b style="color: {text_primary}; font-size: 0.88rem;">${month_cost:.4f}</b> <span style="color: {text_muted};">/ ${monthly_limit:.2f}</span></span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.74rem; margin-bottom: 6px; white-space: nowrap;">
+            <span style="color: {text_secondary}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">MONTHLY SPEND</span>
+            <span style="white-space: nowrap;"><b style="color: {text_primary}; font-size: 0.84rem;">${month_cost:.4f}</b> <span style="color: {text_muted}; font-size: 0.72rem;">/ ${monthly_limit:.2f}</span></span>
         </div>
         """)
         st.progress(monthly_pct)
@@ -864,9 +974,9 @@ with st.container(border=True):
         max_esc = float(budget.get("max_escalation_rate", 0.30))
         esc_pct = min(esc_rate / max_esc, 1.0) if max_esc > 0 else 0.0
         st.html(f"""
-        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: {text_secondary}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">ESCALATION CEILING</span>
-            <span><b style="color: {text_primary}; font-size: 0.88rem;">{esc_rate:.1%}</b> <span style="color: {text_muted};">/ {max_esc:.0%} Max</span></span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.74rem; margin-bottom: 6px; white-space: nowrap;">
+            <span style="color: {text_secondary}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">ESCALATION CEILING</span>
+            <span style="white-space: nowrap;"><b style="color: {text_primary}; font-size: 0.84rem;">{esc_rate:.1%}</b> <span style="color: {text_muted}; font-size: 0.72rem;">/ {max_esc:.0%} Max</span></span>
         </div>
         """)
         st.progress(esc_pct)
@@ -874,9 +984,9 @@ with st.container(border=True):
         min_conf = float(budget.get("min_avg_confidence", 0.60))
         conf_pct = min(avg_conf, 1.0)
         st.html(f"""
-        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: {text_secondary}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">CONFIDENCE SLA</span>
-            <span><b style="color: {text_primary}; font-size: 0.88rem;">{avg_conf:.1%}</b> <span style="color: {text_muted};">(Min: {min_conf:.0%})</span></span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.74rem; margin-bottom: 6px; white-space: nowrap;">
+            <span style="color: {text_secondary}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">CONFIDENCE SLA</span>
+            <span style="white-space: nowrap;"><b style="color: {text_primary}; font-size: 0.84rem;">{avg_conf:.1%}</b> <span style="color: {text_muted}; font-size: 0.72rem;">(Min: {min_conf:.0%})</span></span>
         </div>
         """)
         st.progress(conf_pct)
@@ -1131,7 +1241,7 @@ with tab_alerts:
                     <span class="bento-title">Pending Unresolved Incidents</span>
                     <span class="bento-dot dot-red"></span>
                 </div>
-                <div class="bento-value" style="color: #FDA4AF;">{len(unack)}</div>
+                <div class="bento-value" style="color: {'#FDA4AF' if is_dark else '#E11D48'};">{len(unack)}</div>
                 <div class="bento-footer"><span class="pill-tag pill-danger">Action Required</span></div>
             </div>
             """)
@@ -1142,7 +1252,7 @@ with tab_alerts:
                     <span class="bento-title">Resolved Audit Events</span>
                     <span class="bento-dot dot-green"></span>
                 </div>
-                <div class="bento-value" style="color: #6EE7B7;">{len(ack)}</div>
+                <div class="bento-value" style="color: {'#6EE7B7' if is_dark else '#059669'};">{len(ack)}</div>
                 <div class="bento-footer"><span class="pill-tag pill-optimal">Acknowledged</span></div>
             </div>
             """)
