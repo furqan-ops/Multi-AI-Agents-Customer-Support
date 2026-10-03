@@ -116,12 +116,24 @@ export default function Home() {
       setMessages((prev) => [...prev, agentMessage])
 
       // Auto-play audio response if enabled
-      if (audioUrl) {
-        try {
-          const audio = new Audio(audioUrl)
-          await audio.play()
-        } catch (playErr) {
-          console.warn('Audio auto-play prevented:', playErr)
+      if (audioRepliesEnabled) {
+        if (audioUrl) {
+          try {
+            const audio = new Audio(audioUrl)
+            await audio.play()
+          } catch (playErr) {
+            console.warn('Audio auto-play prevented:', playErr)
+          }
+        } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          try {
+            window.speechSynthesis.cancel()
+            const utterance = new SpeechSynthesisUtterance(agentResponseText)
+            utterance.rate = 1.0
+            utterance.pitch = 1.0
+            window.speechSynthesis.speak(utterance)
+          } catch (synthErr) {
+            console.warn('Speech synthesis error:', synthErr)
+          }
         }
       }
 

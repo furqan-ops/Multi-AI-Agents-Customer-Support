@@ -126,7 +126,7 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
           await onRecordingComplete(audioBlob, transcript)
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'Transcription failed'
-          setError(`STT error: ${msg}. Please ensure backend is running on port 5000.`)
+          setError(`Transcription: ${msg}. You can also type your message in the chat.`)
           console.error('STT error:', err)
           if (onRecordingError) onRecordingError(msg)
         }
