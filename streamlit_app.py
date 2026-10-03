@@ -212,15 +212,22 @@ div[data-testid="stButton"] button {
     height: 34px !important;
     min-height: 34px !important;
     line-height: 34px !important;
-    padding: 0 16px !important;
-    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    font-size: 0.85rem !important;
     font-weight: 600 !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     white-space: nowrap !important;
     margin: 0 !important;
+}
+
+/* Ensure sidebar button remains full width */
+section[data-testid="stSidebar"] div[data-testid="stButton"] button {
+    width: 100% !important;
+    padding: 0 16px !important;
+    height: 36px !important;
 }
 
 /* Glass Containers */
@@ -608,7 +615,7 @@ if not guard.empty and "created_at" in guard.columns:
     guard["created_at"] = pd.to_datetime(guard["created_at"])
 
 # ---------- Dashboard Header ----------
-h_col1, h_col2, h_col3 = st.columns([0.56, 0.20, 0.24], vertical_alignment="center")
+h_col1, h_col2 = st.columns([0.74, 0.26], vertical_alignment="center")
 with h_col1:
     st.markdown("""
     <div style="padding-top: 4px; margin-bottom: 8px;">
@@ -624,16 +631,18 @@ with h_col1:
         st.info("💡 **Connecting Live Supabase:** Currently displaying cached cluster telemetry. To connect your live Supabase database, paste `SUPABASE_URL` and `SUPABASE_SECRET_KEY` into **Streamlit Cloud Settings > Secrets**.")
 
 with h_col2:
-    if st.button("Refresh", icon=":material/refresh:", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
+    btn_col, badge_col = st.columns([0.24, 0.76], vertical_alignment="center")
+    with btn_col:
+        if st.button("", icon=":material/refresh:", help="Refresh Telemetry"):
+            st.cache_data.clear()
+            st.rerun()
 
-with h_col3:
-    unack_count = len(alerts_df[alerts_df["acknowledged"] == False]) if not alerts_df.empty and "acknowledged" in alerts_df.columns else 0
-    if unack_count > 0:
-        st.markdown(f'<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-danger" style="padding: 0 16px; height: 34px; line-height: 34px; font-size: 0.76rem; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; white-space: nowrap;">● {unack_count} Unresolved</span></div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-optimal" style="padding: 0 16px; height: 34px; line-height: 34px; font-size: 0.76rem; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; white-space: nowrap;">● Systems Optimal</span></div>', unsafe_allow_html=True)
+    with badge_col:
+        unack_count = len(alerts_df[alerts_df["acknowledged"] == False]) if not alerts_df.empty and "acknowledged" in alerts_df.columns else 0
+        if unack_count > 0:
+            st.markdown(f'<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-danger" style="padding: 0 14px; height: 34px; line-height: 34px; font-size: 0.74rem; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; white-space: nowrap;">● {unack_count} Unresolved</span></div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-optimal" style="padding: 0 14px; height: 34px; line-height: 34px; font-size: 0.74rem; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; white-space: nowrap;">● Systems Optimal</span></div>', unsafe_allow_html=True)
 
 # ---------- KPI Metrics Calculation ----------
 total_conv = len(conv)
