@@ -1,34 +1,7 @@
 [theme]
 base = "dark"
 primaryColor = "#8B5CF6"
-backgroundColor = "#090D16"
-secondaryBackgroundColor = "#111827"
-textColor = "#F1F5F9"
-linkColor = "#A78BFA"
-borderColor = "#1F2937"
-showWidgetBorder = true
-showSidebarBorder = true
-baseRadius = "0.6rem"
-buttonRadius = "0.5rem"
-font = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
-codeFontSize = "13px"
-codeTextColor = "#E2E8F0"
-codeBackgroundColor = "#0F172A"
-baseFontSize = 14
-chartCategoricalColors = ["#8B5CF6", "#06B6D4", "#10B981", "#F59E0B", "#F43F5E", "#6366F1", "#EC4899"]
-dataframeBorderColor = "#1F2937"
-dataframeHeaderBackgroundColor = "#162032"
-
-[theme.sidebar]
 backgroundColor = "#080C14"
-secondaryBackgroundColor = "#0F172A"
-codeBackgroundColor = "#0F172A"
-borderColor = "#1F2937"
-primaryColor = "#8B5CF6"
-textColor = "#E2E8F0"
-
-[server]
-headless = true
-enableCORS = false
-enableXsrfProtection = false
+secondaryBackgroundColor = "#111726"
+textColor = "#F8FAFC"
+font = "sans serif"
