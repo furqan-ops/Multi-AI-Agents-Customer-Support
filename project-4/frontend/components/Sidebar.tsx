@@ -15,7 +15,7 @@ interface SidebarProps {
 export default function Sidebar({ metrics, onClearChat }: SidebarProps) {
   return (
     <div className="w-72 bg-slate-900/50 backdrop-blur-md border-r border-slate-700/50 p-6 overflow-y-auto flex-shrink-0">
-      <div className="text-xl font-bold mb-6 text-white">🎤 Voice Agent</div>
+      <div className="text-xl font-bold mb-6 text-white">Voice Agent</div>
 
       {/* Session Info */}
       <div className="mb-6">
@@ -64,7 +64,7 @@ export default function Sidebar({ metrics, onClearChat }: SidebarProps) {
         onClick={onClearChat}
         className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 text-sm"
       >
-        🗑️ Clear Chat
+        Clear Chat
       </button>
     </div>
   )

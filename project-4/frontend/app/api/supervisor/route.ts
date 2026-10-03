@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
           const resp = payload.response || payload.answer || payload.text || payload.output
           if (resp) {
             return NextResponse.json({
-              response: resp,
+              response: cleanProfessionalText(resp),
               agent: payload.agent || 'supervisor',
               latency: Date.now() - startTime,
             })
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       ['hello', 'hi', 'hey'].includes(clean)
     ) {
       responseText =
-        "Welcome to The Grand Bistro! 🥂 I am your AI Dining Concierge. " +
+        "Welcome to The Grand Bistro. I am your AI Dining Concierge. " +
         "I would be delighted to assist you with table reservations, explore our seasonal Chef's Tasting Menu, " +
         "answer dietary questions, or check an existing booking. How may I host you today?"
       agentName = 'welcome_concierge'
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
           if (list && list.length > 0) {
             const b = list[0]
             responseText =
-              `Yes! Your reservation at The Grand Bistro is confirmed 🥂\n\n` +
+              `Yes! Your reservation at The Grand Bistro is confirmed.\n\n` +
               `• Reservation #: ${b.id}\n` +
               `• Party Size: ${b.party_size || 2} Guests\n` +
               `• Date: ${b.date || 'Upcoming Date'}\n` +
@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
         }
 
         responseText =
-          `Your table reservation is confirmed! 🥂\n\n` +
+          `Your table reservation is confirmed!\n\n` +
           `• Reservation #: ${bookingId}\n` +
           `• Restaurant: The Grand Bistro\n` +
           `• Party Size: ${party} Guests\n` +
@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      response: responseText,
+      response: cleanProfessionalText(responseText),
       agent: agentName,
       latency: Date.now() - startTime,
     })
@@ -293,6 +293,13 @@ export async function POST(request: NextRequest) {
       latency: 0,
     })
   }
+}
+
+function cleanProfessionalText(text: string): string {
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, '')
+    .replace(/  +/g, ' ')
+    .trim()
 }
 
 function parseDiningBooking(text: string) {
