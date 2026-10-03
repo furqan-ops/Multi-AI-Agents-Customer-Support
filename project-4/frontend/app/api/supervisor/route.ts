@@ -93,6 +93,37 @@ export async function POST(request: NextRequest) {
       agentName = 'welcome_concierge'
     }
 
+    // C. Gratitude & Courtesies ("thank you", "thanks", "appreciate it")
+    else if (
+      /\b(thank you|thanks|thx|thank u|many thanks|appreciate it|much appreciated|grateful|ty)\b/.test(clean) ||
+      ['thank you', 'thanks', 'thx', 'thank u', 'ty'].includes(clean)
+    ) {
+      responseText =
+        "You are most welcome! It is our absolute pleasure to assist you. " +
+        "Please let us know if there is anything else we can arrange for your visit, and we look forward to hosting you at The Grand Bistro."
+      agentName = 'hospitality_courtesy'
+    }
+
+    // D. Goodbyes & Farewell ("bye", "goodbye", "have a nice day")
+    else if (
+      /\b(goodbye|bye|bye bye|see you|see ya|cya|have a good day|have a good night|have a great day|have a nice day)\b/.test(clean) ||
+      ['bye', 'goodbye'].includes(clean)
+    ) {
+      responseText =
+        "Goodbye and have a wonderful day! We look forward to welcoming you to The Grand Bistro soon."
+      agentName = 'hospitality_farewell'
+    }
+
+    // E. Positive Acknowledgments ("perfect", "sounds good", "great")
+    else if (
+      /^(perfect|sounds good|sounds great|awesome|excellent|wonderful|great|superb|lovely|nice|cool)\b/.test(clean) &&
+      clean.length < 35
+    ) {
+      responseText =
+        "Wonderful! We are delighted to assist. Please let me know if you would like to explore our tasting menu, check reservation details, or if you have any questions for your visit."
+      agentName = 'hospitality_courtesy'
+    }
+
     // C. Table Reservation Request & Follow-Up Slot-Filling
     else if (
       /\b(book|booking|reserve|reservation|table|seat|seating)\b/.test(clean) ||
