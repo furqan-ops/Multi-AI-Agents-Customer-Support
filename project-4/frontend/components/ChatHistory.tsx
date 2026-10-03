@@ -13,9 +13,14 @@ export interface Message {
 interface ChatHistoryProps {
   messages: Message[]
   isThinking?: boolean
+  speakingMessageId?: string | null
 }
 
-export default function ChatHistory({ messages, isThinking }: ChatHistoryProps) {
+export default function ChatHistory({
+  messages,
+  isThinking,
+  speakingMessageId,
+}: ChatHistoryProps) {
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -24,47 +29,76 @@ export default function ChatHistory({ messages, isThinking }: ChatHistoryProps) 
 
   return (
     <div className="w-full flex flex-col gap-5 py-4">
-      {messages.map((message) => (
-        <div
-          key={message.id}
-          className={`flex gap-3 ${
-            message.role === 'user' ? 'justify-end' : 'justify-start'
-          } animate-slide-in`}
-        >
-          {/* Agent Avatar */}
-          {message.role === 'agent' && (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 flex items-center justify-center flex-shrink-0 mt-0.5 ring-2 ring-emerald-500/20">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.75}
-                  d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"
-                />
-              </svg>
-            </div>
-          )}
+      {messages.map((message) => {
+        const isSpeaking = speakingMessageId === message.id
 
-          {/* Message Content Bubble */}
+        return (
           <div
-            className={`max-w-[85%] sm:max-w-xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
-              message.role === 'user'
-                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20 rounded-2xl rounded-tr-xs'
-                : 'bg-white text-zinc-800 border border-zinc-200/90 dark:bg-zinc-900/90 dark:text-zinc-100 dark:border-zinc-800/90 rounded-2xl rounded-tl-xs'
-            }`}
+            key={message.id}
+            className={`flex gap-3 ${
+              message.role === 'user' ? 'justify-end' : 'justify-start'
+            } animate-slide-in`}
           >
-            {/* Agent Header Badge */}
+            {/* Agent Avatar */}
             {message.role === 'agent' && (
-              <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-zinc-100 dark:border-zinc-800/80 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span>The Grand Bistro &bull; Dining Concierge</span>
+              <div
+                className={`w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-600 text-white shadow-md flex items-center justify-center flex-shrink-0 mt-0.5 ring-2 transition-all ${
+                  isSpeaking
+                    ? 'ring-emerald-400 scale-105 shadow-emerald-500/40'
+                    : 'ring-emerald-500/20 shadow-emerald-500/25'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.75}
+                    d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"
+                  />
+                </svg>
               </div>
             )}
 
-            <div className="whitespace-pre-wrap">{message.text}</div>
+            {/* Message Content Bubble */}
+            <div
+              className={`max-w-[85%] sm:max-w-xl px-4 py-3 text-sm leading-relaxed shadow-sm transition-all duration-300 ${
+                message.role === 'user'
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20 rounded-2xl rounded-tr-xs'
+                  : isSpeaking
+                  ? 'bg-emerald-50/50 dark:bg-zinc-900 border-2 border-emerald-500 text-zinc-900 dark:text-zinc-100 rounded-2xl rounded-tl-xs ring-4 ring-emerald-500/15 shadow-md shadow-emerald-500/20'
+                  : 'bg-white text-zinc-800 border border-zinc-200/90 dark:bg-zinc-900/90 dark:text-zinc-100 dark:border-zinc-800/90 rounded-2xl rounded-tl-xs'
+              }`}
+            >
+              {/* Agent Header Badge */}
+              {message.role === 'agent' && (
+                <div className="flex items-center justify-between gap-1.5 mb-2 pb-1.5 border-b border-zinc-100 dark:border-zinc-800/80 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>The Grand Bistro &bull; Dining Concierge</span>
+                  </div>
+
+                  {/* Active Reading Aloud Indicator */}
+                  {isSpeaking && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-300/80 dark:border-emerald-700/80 animate-pulse">
+                      <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                        <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.5A2.25 2.25 0 002.25 9.75v4.5a2.25 2.25 0 002.25 2.25h1.94l4.5 4.5c.944.945 2.56.276 2.56-1.06V4.06zM18.54 5.46a.75.75 0 011.06 0 11.25 11.25 0 010 13.08.75.75 0 01-1.06-1.06 9.75 9.75 0 000-10.96.75.75 0 010-1.06zM15.71 8.29a.75.75 0 011.06 0 6.75 6.75 0 010 7.42.75.75 0 11-1.06-1.06 5.25 5.25 0 000-5.3.75.75 0 010-1.06z" />
+                      </svg>
+                      <span>Reading aloud...</span>
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div
+                className={`whitespace-pre-wrap transition-all duration-300 ${
+                  isSpeaking ? 'text-zinc-900 dark:text-zinc-50 font-medium' : ''
+                }`}
+              >
+                {message.text}
+              </div>
 
             {/* Inline Audio Player if Agent Speech is Available */}
             {message.audioUrl && message.role === 'agent' && (
@@ -99,7 +133,7 @@ export default function ChatHistory({ messages, isThinking }: ChatHistoryProps) 
             </div>
           )}
         </div>
-      ))}
+      )})}
 
       {/* Agent Thinking / Typing Indicator */}
       {isThinking && (

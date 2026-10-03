@@ -11,9 +11,11 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [sessionId, setSessionId] = useState<string>('')
   const [audioRepliesEnabled, setAudioRepliesEnabled] = useState<boolean>(true)
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   const recorderRef = useRef<VoiceRecorderHandle>(null)
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     setSessionId(generateUUID())
@@ -117,12 +119,31 @@ export default function Home() {
 
       // Auto-play audio response if enabled
       if (audioRepliesEnabled) {
+        setSpeakingMessageId(agentMessage.id)
+
         if (audioUrl) {
           try {
+            if (currentAudioRef.current) {
+              currentAudioRef.current.pause()
+              currentAudioRef.current.currentTime = 0
+            }
             const audio = new Audio(audioUrl)
+            currentAudioRef.current = audio
+            audio.onended = () => {
+              setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+              currentAudioRef.current = null
+            }
+            audio.onpause = () => {
+              setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+            }
+            audio.onerror = () => {
+              setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+              currentAudioRef.current = null
+            }
             await audio.play()
           } catch (playErr) {
             console.warn('Audio auto-play prevented:', playErr)
+            setSpeakingMessageId(null)
           }
         } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           try {
@@ -130,11 +151,23 @@ export default function Home() {
             const utterance = new SpeechSynthesisUtterance(agentResponseText)
             utterance.rate = 1.0
             utterance.pitch = 1.0
+            utterance.onend = () => {
+              setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+            }
+            utterance.onerror = () => {
+              setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+            }
+            utterance.onpause = () => {
+              setSpeakingMessageId((curr) => (curr === agentMessage.id ? null : curr))
+            }
             window.speechSynthesis.speak(utterance)
           } catch (synthErr) {
             console.warn('Speech synthesis error:', synthErr)
+            setSpeakingMessageId(null)
           }
         }
+      } else {
+        setSpeakingMessageId(null)
       }
 
       setIsProcessing(false)
@@ -176,7 +209,32 @@ export default function Home() {
     }
   }
 
+  const toggleAudioReplies = () => {
+    const nextState = !audioRepliesEnabled
+    setAudioRepliesEnabled(nextState)
+    if (!nextState) {
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause()
+        currentAudioRef.current.currentTime = 0
+        currentAudioRef.current = null
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel()
+      }
+      setSpeakingMessageId(null)
+    }
+  }
+
   const clearChat = () => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause()
+      currentAudioRef.current.currentTime = 0
+      currentAudioRef.current = null
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+    }
+    setSpeakingMessageId(null)
     setMessages([])
   }
 
@@ -277,7 +335,7 @@ export default function Home() {
           {/* Voice Response Toggle */}
           <button
             type="button"
-            onClick={() => setAudioRepliesEnabled(!audioRepliesEnabled)}
+            onClick={toggleAudioReplies}
             title={audioRepliesEnabled ? 'Voice responses enabled' : 'Voice responses muted'}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shadow-sm ${
               audioRepliesEnabled
@@ -384,7 +442,11 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <ChatHistory messages={messages} isThinking={isProcessing} />
+            <ChatHistory
+              messages={messages}
+              isThinking={isProcessing}
+              speakingMessageId={speakingMessageId}
+            />
           )}
 
           {/* Active Voice Bar (Appears when recording or when voice option is open) */}
