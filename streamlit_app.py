@@ -199,17 +199,24 @@ section[data-testid="stSidebar"],
 .pill-neutral { background: rgba(148, 163, 184, 0.15); color: #CBD5E1; border: 1px solid rgba(148, 163, 184, 0.3); }
 
 /* Header Action Button Alignment */
+div[data-testid="stButton"] {
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    margin: 0 !important;
+}
 div[data-testid="stButton"] button {
-    height: 34px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    line-height: 32px !important;
     padding: 0 14px !important;
-    font-size: 0.78rem !important;
+    font-size: 0.76rem !important;
     font-weight: 600 !important;
-    border-radius: 8px !important;
+    border-radius: 6px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin-top: 0px !important;
-    margin-bottom: 0px !important;
+    margin: 0 !important;
 }
 
 /* Glass Containers */
@@ -597,7 +604,7 @@ if not guard.empty and "created_at" in guard.columns:
     guard["created_at"] = pd.to_datetime(guard["created_at"])
 
 # ---------- Dashboard Header ----------
-h_col1, h_col2 = st.columns([0.72, 0.28], vertical_alignment="center")
+h_col1, h_col2, h_col3 = st.columns([0.72, 0.13, 0.15], vertical_alignment="center")
 with h_col1:
     st.markdown("""
     <div style="padding-top: 4px; margin-bottom: 8px;">
@@ -613,17 +620,16 @@ with h_col1:
         st.info("💡 **Connecting Live Supabase:** Currently displaying cached cluster telemetry. To connect your live Supabase database, paste `SUPABASE_URL` and `SUPABASE_SECRET_KEY` into **Streamlit Cloud Settings > Secrets**.")
 
 with h_col2:
-    btn_c1, btn_c2 = st.columns([0.46, 0.54], vertical_alignment="center")
-    with btn_c1:
-        if st.button("Refresh", icon=":material/refresh:", width="stretch"):
-            st.cache_data.clear()
-            st.rerun()
-    with btn_c2:
-        unack_count = len(alerts_df[alerts_df["acknowledged"] == False]) if not alerts_df.empty and "acknowledged" in alerts_df.columns else 0
-        if unack_count > 0:
-            st.markdown(f'<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-danger" style="padding: 4px 10px; font-size: 0.70rem;">● {unack_count} Unresolved</span></div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-optimal" style="padding: 4px 10px; font-size: 0.70rem;">● Systems Optimal</span></div>', unsafe_allow_html=True)
+    if st.button("Refresh", icon=":material/refresh:", width="stretch"):
+        st.cache_data.clear()
+        st.rerun()
+
+with h_col3:
+    unack_count = len(alerts_df[alerts_df["acknowledged"] == False]) if not alerts_df.empty and "acknowledged" in alerts_df.columns else 0
+    if unack_count > 0:
+        st.markdown(f'<div style="display: flex; align-items: center; justify-content: flex-end; height: 32px;"><span class="pill-tag pill-danger" style="padding: 0 10px; height: 32px; line-height: 32px; font-size: 0.70rem; display: inline-flex; align-items: center; box-sizing: border-box;">● {unack_count} Unresolved</span></div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="display: flex; align-items: center; justify-content: flex-end; height: 32px;"><span class="pill-tag pill-optimal" style="padding: 0 10px; height: 32px; line-height: 32px; font-size: 0.70rem; display: inline-flex; align-items: center; box-sizing: border-box;">● Systems Optimal</span></div>', unsafe_allow_html=True)
 
 # ---------- KPI Metrics Calculation ----------
 total_conv = len(conv)
