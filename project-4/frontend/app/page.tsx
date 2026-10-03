@@ -74,6 +74,7 @@ export default function Home() {
           body: JSON.stringify({
             text: text.trim(),
             sessionId: sessionId || 'client',
+            history: messages.slice(-8).map((m) => ({ role: m.role, text: m.text })),
           }),
         })
 
