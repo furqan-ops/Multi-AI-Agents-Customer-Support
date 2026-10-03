@@ -8,8 +8,14 @@ import pandas as pd
 import altair as alt
 
 # ---------- Environment & Supabase Setup ----------
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-load_dotenv(Path(__file__).resolve().parent / ".env")
+load_dotenv()
+try:
+    _parents = Path(__file__).resolve().parents
+    for p in _parents:
+        if (p / ".env").exists():
+            load_dotenv(p / ".env")
+except Exception:
+    pass
 
 def get_secret(key, default=None):
     if key in os.environ and os.environ[key]:
