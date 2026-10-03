@@ -84,7 +84,7 @@ import re
 from datetime import datetime, timedelta
 
 OUT_OF_SCOPE_RESPONSE = (
-    "Sorry, I cannot help you with that. I am your Nexio24 customer assistant and can help you "
+    "Sorry, I cannot help you with that. I am your AI customer assistant and can help you "
     "make a reservation, check your booking status, or answer questions about our opening hours, "
     "refunds, and support policies. Would you like to book a table or check an existing reservation?"
 )
@@ -213,7 +213,7 @@ def match_faq(text: str) -> str | None:
     if re.search(r"\b(contact|email|phone|call us|support email|hotline|phone number)\b", clean):
         return (
             "For urgent issues, please call our emergency support line. For general inquiries, "
-            "you can email us at support@nexio24.com."
+            "you can email us at support@example.com."
         )
     if re.search(r"\b(reset password|forgot password|change password|login issue|cannot login|can't login)\b", clean):
         return (
@@ -255,7 +255,7 @@ async def supervisor_endpoint(request):
         # 2. Handle Clarifications ("what you mean", "what do you mean", etc.)
         elif is_clarification(text):
             response_text = (
-                "I apologize for the confusion! I am your Nexio24 customer assistant. "
+                "I apologize for the confusion! I am your AI customer assistant. "
                 "I can help you reserve a table, check your booking status, or answer questions "
                 "about our opening hours, refund policies, and support services. How may I help you?"
             )
