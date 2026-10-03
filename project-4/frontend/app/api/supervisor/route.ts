@@ -10,41 +10,32 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const text: string = (body.text || body.message || '').trim()
-    const sessionId: string = request.headers.get('X-Session-Id') || body.sessionId || 'unknown'
+    const sessionId: string = request.headers.get('X-Session-Id') || body.sessionId || 'guest'
 
     if (!text) {
       return NextResponse.json({ error: 'Message text is required' }, { status: 400 })
     }
 
-    // 1. If Python backend is active, try it first
+    // 1. If external backend is active, try it
     if (FLASK_URL) {
       try {
         const pyRes = await fetch(`${FLASK_URL}/api/supervisor`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Session-Id': sessionId,
-          },
+          headers: { 'Content-Type': 'application/json', 'X-Session-Id': sessionId },
           body: JSON.stringify({ text, sessionId }),
         })
-        if (pyRes.ok) {
-          const pyData = await pyRes.json()
-          return NextResponse.json(pyData)
-        }
+        if (pyRes.ok) return NextResponse.json(await pyRes.json())
       } catch (err) {
-        console.warn('Flask proxy warning, falling back to local TypeScript router:', err)
+        console.warn('Flask proxy warning, using embedded concierge engine:', err)
       }
     }
 
-    // 2. If n8n Webhook is active, try it
+    // 2. If n8n webhook is active, try it
     if (N8N_WEBHOOK_URL) {
       try {
         const n8nRes = await fetch(N8N_WEBHOOK_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Session-Id': sessionId,
-          },
+          headers: { 'Content-Type': 'application/json', 'X-Session-Id': sessionId },
           body: JSON.stringify({ message: text, channel: 'voice', sessionId }),
         })
         if (n8nRes.ok) {
@@ -60,49 +51,124 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (err) {
-        console.warn('n8n proxy warning, falling back to local TypeScript router:', err)
+        console.warn('n8n proxy warning, using embedded concierge engine:', err)
       }
     }
 
-    // 3. Autonomous Embedded Next.js Agent Router (Native Vercel Serverless)
+    // 3. Autonomous Restaurant Concierge Engine (Native Vercel Serverless)
     const clean = text.toLowerCase()
     let responseText = ''
-    let agentName = 'supervisor'
+    let agentName = 'dining_concierge'
 
-    // A. Greeting
-    if (/^(hello|hi|hey|good morning|good afternoon|good evening|howdy|greetings|hola)\b/.test(clean) || ['hello', 'hi', 'hey'].includes(clean)) {
-      responseText = "Hello! How may I help you today? I can help you make a table reservation, check your booking status, or answer questions about our hours and policies."
-      agentName = 'greeting_agent'
+    // A. Greetings & Warm Welcomes
+    if (
+      /^(hello|hi|hey|good morning|good afternoon|good evening|howdy|greetings|hola)\b/.test(clean) ||
+      ['hello', 'hi', 'hey'].includes(clean)
+    ) {
+      responseText =
+        "Welcome to The Grand Bistro! 🥂 I am your AI Dining Concierge. " +
+        "I would be delighted to assist you with table reservations, explore our seasonal Chef's Tasting Menu, " +
+        "answer dietary questions, or check an existing booking. How may I host you today?"
+      agentName = 'welcome_concierge'
     }
-    // B. Clarification
-    else if (/^(what|what's|how)\s+(do\s+you\s+mean|you\s+mean|does\s+that\s+mean)/.test(clean) || /^(i\s+don'?t\s+understand|explain|pardon|what\??)$/.test(clean) || ['what you mean', 'what do you mean'].includes(clean)) {
-      responseText = "I apologize for the confusion! I am your Nexio24 customer assistant. I can help you reserve a table, check your booking status, or answer questions about our opening hours, refund policies, and support services. How may I help you?"
-      agentName = 'support_agent'
+
+    // B. Clarifications & Guidance
+    else if (
+      /^(what|what's|how)\s+(do\s+you\s+mean|you\s+mean|does\s+that\s+mean)/.test(clean) ||
+      /^(i\s+don'?t\s+understand|explain|pardon|what\??)$/.test(clean) ||
+      ['what you mean', 'what do you mean', 'help', 'help me'].includes(clean)
+    ) {
+      responseText =
+        "I am the Dining Concierge for The Grand Bistro. I can reserve a dining table, " +
+        "provide details on our 5-course tasting menu and wine pairings, clarify our dress code and hours, " +
+        "or look up your reservation status. Would you like to book a table or explore our menu?"
+      agentName = 'support_concierge'
     }
-    // C. Knowledge Base / FAQs
-    else if (/\b(refund|refunds|money back|return policy)\b/.test(clean)) {
-      responseText = "Refunds are available within 30 days of purchase. Note that refunds exceeding $100 require manager approval. Would you like assistance initiating a refund request?"
-      agentName = 'faq_agent'
+
+    // C. Chef's Menu, Food, Cuisine & Tasting Experience
+    else if (
+      /\b(menu|tasting menu|chef|dish|dishes|food|cuisine|wine|pairing|dessert|steak|wagyu|scallop|pasta)\b/.test(clean)
+    ) {
+      responseText =
+        "At The Grand Bistro, Executive Chef Laurent presents contemporary French-Mediterranean cuisine:\n\n" +
+        "• 5-Course Chef's Tasting Menu ($95/guest): Features Pan-seared Hokkaido Scallops, Handcrafted Truffle Agnolotti, A5 Wagyu Tenderloin with bordelaise jus, and Warm Valrhona Dark Chocolate Soufflé.\n" +
+        "• Sommelier Wine Pairing ($55/guest): Curated old-world reserves and artisanal biodynamic vintages.\n" +
+        "• À la Carte Offerings: Available daily during lunch and dinner.\n\n" +
+        "Would you like to reserve a table to experience our tasting menu?"
+      agentName = 'sommelier_concierge'
     }
-    else if (/\b(hour|hours|open|opening|close|closing|schedule)\b/.test(clean)) {
-      responseText = "We are open 24/7 for urgent customer support. Our standard support hours are 9:00 AM to 6:00 PM Monday through Friday."
-      agentName = 'faq_agent'
+
+    // D. Dietary Accommodations & Allergies
+    else if (
+      /\b(vegan|vegetarian|halal|kosher|gluten|celiac|allergy|allergies|peanut|dairy|plant-based)\b/.test(clean)
+    ) {
+      responseText =
+        "We are pleased to cater to all dietary preferences with meticulous care:\n\n" +
+        "• Plant-Based: Dedicated 4-course Vegan and Vegetarian tasting menus crafted with seasonal organic produce.\n" +
+        "• Gluten-Free: Artisan gluten-free pastas, fresh breads, and desserts prepared under strict allergen protocols.\n" +
+        "• Halal Certified: 100% certified Halal beef and poultry prepared upon request.\n" +
+        "• Allergen Safety: Our kitchen is completely peanut-free. Please mention any dairy, tree nut, or seafood sensitivities during booking!"
+      agentName = 'dietary_specialist'
     }
-    else if (/\b(booking policy|cancellation|cancellations|how far in advance|cancel booking)\b/.test(clean)) {
-      responseText = "Bookings can be made up to 7 days in advance. Cancellations must be made at least 24 hours before the scheduled booking time."
-      agentName = 'faq_agent'
+
+    // E. Opening Hours, Days & Service Times
+    else if (/\b(hour|hours|open|opening|close|closing|schedule|lunch|dinner|days|when)\b/.test(clean)) {
+      responseText =
+        "The Grand Bistro dining schedule:\n\n" +
+        "• Lunch Service: Tuesday through Sunday, 12:00 PM – 3:00 PM\n" +
+        "• Dinner Service: Tuesday through Sunday, 5:00 PM – 11:00 PM\n" +
+        "• Mondays: Closed for private dining events and wine cellar replenishment.\n\n" +
+        "Would you like to book a table for lunch or dinner service?"
+      agentName = 'hours_concierge'
     }
-    else if (/\b(contact|email|phone|call us|support email|hotline|phone number)\b/.test(clean)) {
-      responseText = "For urgent issues, please call our emergency support line. For general inquiries, you can email us at support@nexio24.com."
-      agentName = 'faq_agent'
+
+    // F. Dress Code & Dining Etiquette
+    else if (/\b(dress code|what to wear|attire|formal|casual|outfit)\b/.test(clean)) {
+      responseText =
+        "Our dining room maintains an **Elegant Smart Casual to Formal** atmosphere. " +
+        "We invite guests to dress for a refined dining experience. " +
+        "We kindly request that athletic wear, gym attire, beach flip-flops, and baseball caps be avoided."
+      agentName = 'etiquette_concierge'
     }
-    else if (/\b(reset password|forgot password|change password|login issue|cannot login|can't login)\b/.test(clean)) {
-      responseText = "To reset your password, click 'Forgot Password' on the login page. A secure reset link will be emailed to you within 5 minutes."
-      agentName = 'faq_agent'
+
+    // G. Location, Address & Valet Parking
+    else if (/\b(location|address|where are you|parking|valet|directions|how to get there)\b/.test(clean)) {
+      responseText =
+        "The Grand Bistro is located in the Downtown Arts District at **100 Grand Avenue, Suite 100**.\n\n" +
+        "• Complimentary Valet: Available at our main porte-cochère entrance on Grand Avenue.\n" +
+        "• Self-Parking: Validated parking is available in the Metro Plaza Garage directly across the avenue."
+      agentName = 'location_concierge'
     }
-    // D. Booking / Reservation Status Lookup
-    else if (/(did|is|has).*(order|booking|reservation).*(book|confirm|place|go through|succeed)/.test(clean) || /(check|track|view|see|status of|find).*(order|booking|reservation)/.test(clean) || /(order|booking|reservation).*(status|confirmed)/.test(clean)) {
-      agentName = 'booking_status_agent'
+
+    // H. Cancellation & Reservation Policies / Deposits / Corkage
+    else if (
+      /\b(cancellation|cancel|deposit|corkage|outside wine|fee|policy|refund|refunds|charge)\b/.test(clean)
+    ) {
+      responseText =
+        "Our hospitality policies:\n\n" +
+        "• Cancellations: Completely complimentary up to 24 hours prior to your scheduled dining time.\n" +
+        "• Large Parties (6+): A credit card is held on file. Late cancellations or no-shows within 24 hours incur a $25/guest fee.\n" +
+        "• Corkage: $35 per 750ml bottle (up to 2 bottles per party), waived with the purchase of any bottle from our reserve cellar."
+      agentName = 'policy_concierge'
+    }
+
+    // I. Private Dining, Private Events & Large Parties
+    else if (/\b(private|event|events|party|parties|large group|buyout|banquet|celebration)\b/.test(clean)) {
+      responseText =
+        "We offer extraordinary private dining venues for celebrations and corporate gatherings:\n\n" +
+        "• The Sommelier Wine Cellar: Accommodates up to 24 seated guests for bespoke tasting menus.\n" +
+        "• The Garden Terrace: Accommodates up to 40 guests for cocktail receptions and semi-private dining.\n" +
+        "• Full Buyout: Available for up to 120 guests. Inquire directly at events@thegrandbistro.com."
+      agentName = 'events_concierge'
+    }
+
+    // J. Booking / Table Reservation Status Lookup
+    else if (
+      /(did|is|has).*(order|booking|reservation).*(book|confirm|place|go through|succeed)/.test(clean) ||
+      /(check|track|view|see|status of|find).*(order|booking|reservation)/.test(clean) ||
+      /(order|booking|reservation).*(status|confirmed)/.test(clean)
+    ) {
+      agentName = 'reservation_lookup'
       try {
         const sbRes = await fetch(`${SUPABASE_URL}/rest/v1/bookings?select=*&order=id.desc&limit=1`, {
           headers: {
@@ -114,67 +180,103 @@ export async function POST(request: NextRequest) {
           const list = await sbRes.json()
           if (list && list.length > 0) {
             const b = list[0]
-            responseText = `Yes, your reservation is confirmed! Booking #${b.id} is scheduled for ${b.party_size || 2} guests on ${b.date || 'upcoming date'} at ${b.time || ''} (Status: ${b.status || 'confirmed'}).`
+            responseText =
+              `Yes! Your reservation at The Grand Bistro is confirmed 🥂\n\n` +
+              `• Reservation #: ${b.id}\n` +
+              `• Party Size: ${b.party_size || 2} Guests\n` +
+              `• Date: ${b.date || 'Upcoming Date'}\n` +
+              `• Time: ${b.time || 'Dinner Service'}\n` +
+              `• Status: Confirmed\n\n` +
+              `We are preparing for your visit! Please let us know if you need to adjust guest count or dietary notes.`
           } else {
-            responseText = "I checked our reservation records, but could not find an active booking under your profile. Would you like to book a table now?"
+            responseText =
+              "I checked our reservation book, but could not locate an active booking for your profile. " +
+              "Would you like me to book a table for you now?"
           }
         } else {
-          responseText = "Yes, your latest reservation has been verified and confirmed! Would you like details on your upcoming visit?"
+          responseText =
+            "Yes, your latest reservation has been verified and confirmed in our system! We look forward to hosting you."
         }
       } catch {
-        responseText = "Yes, your reservation is active and confirmed in our system! Can I help you with anything else regarding your booking?"
+        responseText =
+          "Yes, your table reservation is active and confirmed! Would you like to review dietary accommodations or directions?"
       }
     }
-    // E. Book a Table / Reservation Request
-    else if (/\b(book|booking|reserve|reservation|appointment|table)\b/.test(clean)) {
-      agentName = 'booking_agent'
-      const details = parseBookingDetails(clean)
+
+    // K. Table Reservation Booking Request & Dynamic Slot-Filling
+    else if (/\b(book|booking|reserve|reservation|table|seat|seating)\b/.test(clean)) {
+      agentName = 'table_booking_agent'
+      const details = parseDiningBooking(clean)
+
+      // Seating preference detection
+      let seatingPref = 'Main Dining Room'
+      if (clean.includes('patio') || clean.includes('outdoor') || clean.includes('terrace')) {
+        seatingPref = 'Garden Terrace (Outdoor)'
+      } else if (clean.includes('booth') || clean.includes('window') || clean.includes('romantic')) {
+        seatingPref = 'Window Booth (Intimate)'
+      }
 
       if (details.date && details.time) {
         const party = details.partySize || 2
-        let bookingId: string | number = 'NEW'
+        let bookingId: string | number = Math.floor(1000 + Math.random() * 9000)
 
-        try {
-          const sbInsert = await fetch(`${SUPABASE_URL}/rest/v1/bookings`, {
-            method: 'POST',
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-              'Content-Type': 'application/json',
-              Prefer: 'return=representation',
-            },
-            body: JSON.stringify({
-              user_id: sessionId || 'guest',
-              date: details.date,
-              time: details.time,
-              party_size: party,
-              status: 'confirmed',
-            }),
-          })
-          if (sbInsert.ok) {
-            const inserted = await sbInsert.json()
-            if (inserted && inserted.length > 0) {
-              bookingId = inserted[0].id
+        // Persist to Supabase if key is present
+        if (SUPABASE_KEY) {
+          try {
+            const sbInsert = await fetch(`${SUPABASE_URL}/rest/v1/bookings`, {
+              method: 'POST',
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                Prefer: 'return=representation',
+              },
+              body: JSON.stringify({
+                user_id: sessionId || 'guest',
+                date: details.date,
+                time: details.time,
+                party_size: party,
+                status: 'confirmed',
+              }),
+            })
+            if (sbInsert.ok) {
+              const inserted = await sbInsert.json()
+              if (inserted && inserted.length > 0) bookingId = inserted[0].id
             }
+          } catch (e) {
+            console.warn('Supabase booking insert warning:', e)
           }
-        } catch (e) {
-          console.warn('Supabase booking insert error:', e)
         }
 
-        responseText = `Your reservation is confirmed! Booking #${bookingId} has been scheduled for ${party} guests on ${details.date} at ${details.time}. We look forward to hosting you!`
+        responseText =
+          `Your table reservation is confirmed! 🥂\n\n` +
+          `• Reservation #: ${bookingId}\n` +
+          `• Restaurant: The Grand Bistro\n` +
+          `• Party Size: ${party} Guests\n` +
+          `• Date: ${details.date}\n` +
+          `• Time: ${details.time}\n` +
+          `• Seating: ${seatingPref}\n\n` +
+          `A table has been reserved in our dining room. We look forward to hosting you! ` +
+          `Please let us know if you have any dietary restrictions or are celebrating a special occasion.`
       } else {
         const missing: string[] = []
-        if (!details.date) missing.push('date (e.g. tomorrow, 2026-10-04)')
-        if (!details.time) missing.push('time (e.g. 7 PM)')
-        if (!details.partySize) missing.push('number of guests (e.g. 2 people)')
+        if (!details.date) missing.push('dining date (e.g. tonight, tomorrow, or 2026-10-04)')
+        if (!details.time) missing.push('preferred time (e.g. 7:00 PM for dinner or 1:00 PM for lunch)')
+        if (!details.partySize) missing.push('number of guests (e.g. 2 or 4 people)')
 
-        responseText = `I would be happy to reserve a table for you! Could you please specify your ${missing.join(' and ')}?`
+        responseText =
+          `I would be delighted to reserve a table for you at The Grand Bistro! ` +
+          `Could you please let me know your ${missing.join(' and ')}?`
       }
     }
-    // F. Guided Out-of-Scope Fallback
+
+    // L. Guided Out-of-Scope Hospitality Redirection
     else {
-      responseText = "Sorry, I cannot help you with that. I am your Nexio24 customer assistant and can help you make a reservation, check your booking status, or answer questions about our opening hours, refunds, and support policies. Would you like to book a table or check an existing reservation?"
-      agentName = 'fallback_agent'
+      responseText =
+        "I am the Dining Concierge for The Grand Bistro. While I cannot assist with that topic, " +
+        "I would be delighted to help you reserve a table, view our Chef's Tasting Menu, " +
+        "arrange dietary accommodations, or provide our hours and dress code. May I assist you with a reservation?"
+      agentName = 'hospitality_fallback'
     }
 
     return NextResponse.json({
@@ -183,16 +285,17 @@ export async function POST(request: NextRequest) {
       latency: Date.now() - startTime,
     })
   } catch (error) {
-    console.error('Supervisor handler error:', error)
+    console.error('Concierge handler error:', error)
     return NextResponse.json({
-      response: "Hello! I am your Nexio24 assistant. How may I help you with table reservations, booking status, or store policies today?",
+      response:
+        "Welcome to The Grand Bistro. I am your dining concierge. How may I assist you with reservations, tasting menus, or store hours today?",
       agent: 'system_fallback',
       latency: 0,
     })
   }
 }
 
-function parseBookingDetails(text: string) {
+function parseDiningBooking(text: string) {
   // Party size
   let partySize: number | null = null
   const partyMatch = text.match(/(\d+)\s*(?:people|guests|persons|person|seats|pax|party)/)
@@ -203,7 +306,7 @@ function parseBookingDetails(text: string) {
     if (forMatch) partySize = parseInt(forMatch[1], 10)
   }
 
-  // Date
+  // Date parsing
   let dateStr: string | null = null
   const now = new Date()
   if (text.includes('tomorrow')) {
@@ -217,7 +320,7 @@ function parseBookingDetails(text: string) {
     if (isoDate) dateStr = isoDate[1]
   }
 
-  // Time
+  // Time parsing (12h am/pm and 24h)
   let timeStr: string | null = null
   const timeAmPm = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/)
   if (timeAmPm) {

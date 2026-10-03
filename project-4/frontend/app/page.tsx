@@ -182,36 +182,36 @@ export default function Home() {
 
   const quickPrompts = [
     {
-      title: 'Book a Table',
-      category: 'Reservation',
+      title: 'Reserve a Table',
+      category: 'Booking',
       query: 'I would like to book a table for 2 people tomorrow at 7 PM',
       badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
       hoverClass: 'hover:border-emerald-500/50 hover:bg-emerald-500/[0.03]',
       iconColor: 'text-emerald-500',
     },
     {
-      title: 'Check Booking Status',
-      category: 'Status',
-      query: 'Did my order or booking get confirmed?',
+      title: "Chef's Tasting Menu",
+      category: 'Dining',
+      query: "What is included in the chef's tasting menu and wine pairings?",
+      badgeClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20',
+      hoverClass: 'hover:border-purple-500/50 hover:bg-purple-500/[0.03]',
+      iconColor: 'text-purple-500',
+    },
+    {
+      title: 'Dietary & Allergies',
+      category: 'Dietary',
+      query: 'Do you offer vegan, halal, and gluten-free dining options?',
       badgeClass: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20',
       hoverClass: 'hover:border-sky-500/50 hover:bg-sky-500/[0.03]',
       iconColor: 'text-sky-500',
     },
     {
-      title: 'Opening Hours',
-      category: 'Hours',
-      query: 'What are your opening hours and support schedule?',
+      title: 'Hours & Dress Code',
+      category: 'Visitor Info',
+      query: 'What are your opening hours, location, and dining dress code?',
       badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
       hoverClass: 'hover:border-amber-500/50 hover:bg-amber-500/[0.03]',
       iconColor: 'text-amber-500',
-    },
-    {
-      title: 'Refund Policy',
-      category: 'Policy',
-      query: 'What is your refund policy?',
-      badgeClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20',
-      hoverClass: 'hover:border-purple-500/50 hover:bg-purple-500/[0.03]',
-      iconColor: 'text-purple-500',
     },
   ]
 
@@ -232,14 +232,14 @@ export default function Home() {
           </div>
           <div>
             <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
-              Customer Support &amp; Booking Agent
+              The Grand Bistro &bull; Dining Concierge
             </h1>
             <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span>Online &bull; Ready to assist</span>
+              <span>Online &bull; Ready for reservations &amp; dining inquiries</span>
             </div>
           </div>
         </div>
@@ -355,11 +355,10 @@ export default function Home() {
               </div>
 
               <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
-                How may I assist you today?
+                Welcome to The Grand Bistro
               </h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mb-8">
-                I can help you reserve a table, look up your existing booking, or answer questions
-                about opening hours and refund policies.
+                I am your AI Dining Concierge. I can help you reserve a table, explore our chef's tasting menu, check dietary accommodations, or look up existing reservations.
               </p>
 
               {/* Quick Prompt Cards with Color Badges */}
@@ -414,7 +413,7 @@ export default function Home() {
             onToggleVoice={handleToggleVoice}
           />
           <div className="text-[11px] text-zinc-400 dark:text-zinc-500 text-center mt-2">
-            Nexio24 Customer Support &bull; Multi-agent AI system
+            The Grand Bistro &bull; AI Hospitality &amp; Dining Concierge
           </div>
         </div>
       </footer>

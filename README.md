@@ -1,4 +1,4 @@
-# Nexio24: Multi-Agent Customer Support & Voice Reservation System
+# The Grand Bistro: AI Multi-Agent Dining Concierge & Table Reservation System
 
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![FastAPI / Starlette](https://img.shields.io/badge/FastAPI-Starlette-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
@@ -7,7 +7,7 @@
 [![Deepgram](https://img.shields.io/badge/Deepgram-STT-13EF93?style=for-the-badge)](https://deepgram.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
-> An enterprise-grade, multi-agent AI customer support and reservation platform featuring **low-code workflow orchestration (n8n)**, **real-time voice & web interaction (Next.js + Python FastAPI)**, and **observability analytics (Streamlit)**.
+> A luxury hospitality multi-agent AI concierge platform featuring **autonomous table reservations**, **Chef's tasting menu & wine pairings**, **strict allergen & dietary protocols**, **low-code workflow orchestration (n8n)**, and **real-time voice & chat (Next.js 15)**.
 
 ---
 
