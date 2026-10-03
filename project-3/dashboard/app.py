@@ -63,15 +63,15 @@ section[data-testid="stSidebar"],
 }
 
 .block-container {
-    padding-top: 4.5rem !important;
-    padding-bottom: 3.5rem !important;
-    max-width: 1460px !important;
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+    max-width: 1440px !important;
 }
 
 /* 2026 Sleek Ultra-Thin Minimalist Scrollbar */
 ::-webkit-scrollbar {
-    width: 5px !important;
-    height: 5px !important;
+    width: 4px !important;
+    height: 4px !important;
 }
 ::-webkit-scrollbar-track {
     background: transparent !important;
@@ -93,24 +93,24 @@ section[data-testid="stSidebar"],
 .live-beacon {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: rgba(16, 185, 129, 0.10);
     border: 1px solid rgba(16, 185, 129, 0.35);
     color: #10B981;
-    padding: 5px 12px;
+    padding: 4px 10px;
     border-radius: 9999px;
-    font-size: 0.75rem;
+    font-size: 0.70rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
 .beacon-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     background-color: #10B981;
     border-radius: 50%;
-    box-shadow: 0 0 10px #10B981;
+    box-shadow: 0 0 8px #10B981;
     animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -123,53 +123,53 @@ section[data-testid="stSidebar"],
 .bento-card {
     background: #111726;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 12px;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
 }
 
 .bento-card:hover {
     transform: translateY(-2px);
     border-color: rgba(139, 92, 246, 0.4);
-    box-shadow: 0 8px 24px -4px rgba(139, 92, 246, 0.15);
+    box-shadow: 0 6px 20px -4px rgba(139, 92, 246, 0.15);
 }
 
 .bento-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .bento-title {
     color: #94A3B8;
-    font-size: 0.78rem;
+    font-size: 0.70rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
 
 .bento-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
 }
-.dot-blue   { background-color: #38BDF8; box-shadow: 0 0 8px #38BDF8; }
-.dot-green  { background-color: #10B981; box-shadow: 0 0 8px #10B981; }
-.dot-purple { background-color: #8B5CF6; box-shadow: 0 0 8px #8B5CF6; }
-.dot-orange { background-color: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
-.dot-red    { background-color: #F43F5E; box-shadow: 0 0 8px #F43F5E; }
-.dot-cyan   { background-color: #06B6D4; box-shadow: 0 0 8px #06B6D4; }
+.dot-blue   { background-color: #38BDF8; box-shadow: 0 0 6px #38BDF8; }
+.dot-green  { background-color: #10B981; box-shadow: 0 0 6px #10B981; }
+.dot-purple { background-color: #8B5CF6; box-shadow: 0 0 6px #8B5CF6; }
+.dot-orange { background-color: #F59E0B; box-shadow: 0 0 6px #F59E0B; }
+.dot-red    { background-color: #F43F5E; box-shadow: 0 0 6px #F43F5E; }
+.dot-cyan   { background-color: #06B6D4; box-shadow: 0 0 6px #06B6D4; }
 
 .bento-value {
     color: #FFFFFF;
-    font-size: 1.85rem;
+    font-size: 1.55rem;
     font-weight: 800;
     letter-spacing: -0.02em;
-    line-height: 1.35 !important;
-    margin-bottom: 8px;
+    line-height: 1.25 !important;
+    margin-bottom: 4px;
     overflow: visible !important;
 }
 
@@ -178,8 +178,8 @@ section[data-testid="stSidebar"],
     align-items: center;
     gap: 6px;
     color: #94A3B8;
-    font-size: 0.78rem;
-    line-height: 1.4 !important;
+    font-size: 0.70rem;
+    line-height: 1.3 !important;
     overflow: visible !important;
 }
 
@@ -187,9 +187,9 @@ section[data-testid="stSidebar"],
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.02em;
 }
@@ -198,31 +198,45 @@ section[data-testid="stSidebar"],
 .pill-danger  { background: rgba(244, 63, 94, 0.15); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.3); }
 .pill-neutral { background: rgba(148, 163, 184, 0.15); color: #CBD5E1; border: 1px solid rgba(148, 163, 184, 0.3); }
 
+/* Header Action Button Alignment */
+div[data-testid="stButton"] button {
+    height: 34px !important;
+    padding: 0 14px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+}
+
 /* Glass Containers */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     background: #111726 !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Modern Tab Pills */
 div[data-baseweb="tab-list"] {
     background: #0D131F !important;
-    padding: 4px !important;
-    border-radius: 10px !important;
+    padding: 3px !important;
+    border-radius: 8px !important;
     border: 1px solid rgba(255, 255, 255, 0.06) !important;
-    gap: 4px !important;
-    margin-bottom: 20px !important;
+    gap: 3px !important;
+    margin-bottom: 14px !important;
 }
 button[data-baseweb="tab"] {
     background: transparent !important;
     border: none !important;
     color: #94A3B8 !important;
-    font-size: 0.88rem !important;
+    font-size: 0.80rem !important;
     font-weight: 600 !important;
-    padding: 8px 18px !important;
-    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
     transition: all 0.2s ease !important;
 }
 button[data-baseweb="tab"]:hover {
@@ -586,11 +600,11 @@ if not guard.empty and "created_at" in guard.columns:
 h_col1, h_col2 = st.columns([0.72, 0.28], vertical_alignment="center")
 with h_col1:
     st.markdown("""
-    <div style="padding-top: 10px; margin-bottom: 14px;">
-        <h1 style="color: #FFFFFF; font-size: 2.15rem; font-weight: 800; line-height: 1.3; margin: 0 0 6px 0; letter-spacing: -0.02em; overflow: visible;">
+    <div style="padding-top: 4px; margin-bottom: 8px;">
+        <h1 style="color: #FFFFFF; font-size: 1.65rem; font-weight: 800; line-height: 1.25; margin: 0 0 4px 0; letter-spacing: -0.02em; overflow: visible;">
             Multi-Agent Performance &amp; Cost Governance Center
         </h1>
-        <div style="color: #94A3B8; font-size: 0.92rem; font-weight: 400; line-height: 1.4;">
+        <div style="color: #94A3B8; font-size: 0.80rem; font-weight: 400; line-height: 1.35;">
             Autonomous AI Operations • Real-time Telemetry, Guardrails, Latency Analytics, &amp; Cost Governance
         </div>
     </div>
@@ -599,7 +613,7 @@ with h_col1:
         st.info("💡 **Connecting Live Supabase:** Currently displaying cached cluster telemetry. To connect your live Supabase database, paste `SUPABASE_URL` and `SUPABASE_SECRET_KEY` into **Streamlit Cloud Settings > Secrets**.")
 
 with h_col2:
-    btn_c1, btn_c2 = st.columns([0.45, 0.55], vertical_alignment="center")
+    btn_c1, btn_c2 = st.columns([0.46, 0.54], vertical_alignment="center")
     with btn_c1:
         if st.button("Refresh", icon=":material/refresh:", width="stretch"):
             st.cache_data.clear()
@@ -607,9 +621,9 @@ with h_col2:
     with btn_c2:
         unack_count = len(alerts_df[alerts_df["acknowledged"] == False]) if not alerts_df.empty and "acknowledged" in alerts_df.columns else 0
         if unack_count > 0:
-            st.markdown(f'<div style="text-align: right;"><span class="pill-tag pill-danger">● {unack_count} Unresolved</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-danger" style="padding: 4px 10px; font-size: 0.70rem;">● {unack_count} Unresolved</span></div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div style="text-align: right;"><span class="pill-tag pill-optimal">● Systems Optimal</span></div>', unsafe_allow_html=True)
+            st.markdown('<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-optimal" style="padding: 4px 10px; font-size: 0.70rem;">● Systems Optimal</span></div>', unsafe_allow_html=True)
 
 # ---------- KPI Metrics Calculation ----------
 total_conv = len(conv)
@@ -739,7 +753,7 @@ with hero_left:
 with hero_right:
     # Top Hero Chart: Total LLMs Cost & Token Distribution (Runagent Style)
     with st.container(border=True):
-        st.markdown("<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;'><span style='color: #F8FAFC; font-weight: 700; font-size: 1rem;'>Total LLMs Cost & Token Telemetry</span><span style='color: #94A3B8; font-size: 0.78rem;'>Stacked by Day</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;'><span style='color: #F8FAFC; font-weight: 700; font-size: 0.88rem;'>Total LLMs Cost & Token Telemetry</span><span style='color: #94A3B8; font-size: 0.72rem;'>Stacked by Day</span></div>", unsafe_allow_html=True)
         st.caption("Prompt vs Completion token velocity with cumulative USD expenditure trajectory")
 
         if not usage.empty and "created_at" in usage.columns:
@@ -760,8 +774,8 @@ with hero_right:
             )
 
             hero_chart = alt.Chart(melted).mark_bar(
-                cornerRadiusTopLeft=5,
-                cornerRadiusTopRight=5
+                cornerRadiusTopLeft=4,
+                cornerRadiusTopRight=4
             ).encode(
                 x=alt.X("date_str:N", title=None, axis=alt.Axis(labelColor="#94A3B8", labelAngle=0, tickColor="transparent", domain=False)),
                 y=alt.Y("Tokens:Q", title=None, stack="zero", axis=alt.Axis(labelColor="#94A3B8", gridColor="rgba(255,255,255,0.05)", domain=False, tickColor="transparent")),
@@ -774,7 +788,7 @@ with hero_right:
                     alt.Tooltip("Tokens:Q", title="Tokens", format=","),
                     alt.Tooltip("cost_usd:Q", title="Day Spend", format="$.4f")
                 ]
-            ).properties(height=265).configure_view(strokeWidth=0).configure(background="transparent")
+            ).properties(height=215).configure_view(strokeWidth=0).configure(background="transparent")
 
             st.altair_chart(hero_chart, width="stretch")
         else:
@@ -800,17 +814,17 @@ with st.container(border=True):
     b1, b2, b3, b4 = st.columns(4)
     with b1:
         st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">DAILY SPEND</span>
-            <span><b style="color: #FFFFFF; font-size: 0.88rem;">&#36;{today_cost:.4f}</b> <span style="color: #64748B;">/ &#36;{daily_limit:.2f}</span></span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.72rem; margin-bottom: 3px;">
+            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.70rem;">DAILY SPEND</span>
+            <span><b style="color: #FFFFFF; font-size: 0.82rem;">&#36;{today_cost:.4f}</b> <span style="color: #64748B; font-size: 0.72rem;">/ &#36;{daily_limit:.2f}</span></span>
         </div>
         """, unsafe_allow_html=True)
         st.progress(daily_pct)
     with b2:
         st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">MONTHLY SPEND</span>
-            <span><b style="color: #FFFFFF; font-size: 0.88rem;">&#36;{month_cost:.4f}</b> <span style="color: #64748B;">/ &#36;{monthly_limit:.2f}</span></span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.72rem; margin-bottom: 3px;">
+            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.70rem;">MONTHLY SPEND</span>
+            <span><b style="color: #FFFFFF; font-size: 0.82rem;">&#36;{month_cost:.4f}</b> <span style="color: #64748B; font-size: 0.72rem;">/ &#36;{monthly_limit:.2f}</span></span>
         </div>
         """, unsafe_allow_html=True)
         st.progress(monthly_pct)
@@ -818,9 +832,9 @@ with st.container(border=True):
         max_esc = float(budget.get("max_escalation_rate", 0.30))
         esc_pct = min(esc_rate / max_esc, 1.0) if max_esc > 0 else 0.0
         st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">ESCALATION CEILING</span>
-            <span><b style="color: #FFFFFF; font-size: 0.88rem;">{esc_rate:.1%}</b> <span style="color: #64748B;">/ {max_esc:.0%} Max</span></span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.72rem; margin-bottom: 3px;">
+            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.70rem;">ESCALATION CEILING</span>
+            <span><b style="color: #FFFFFF; font-size: 0.82rem;">{esc_rate:.1%}</b> <span style="color: #64748B; font-size: 0.72rem;">/ {max_esc:.0%} Max</span></span>
         </div>
         """, unsafe_allow_html=True)
         st.progress(esc_pct)
@@ -828,9 +842,9 @@ with st.container(border=True):
         min_conf = float(budget.get("min_avg_confidence", 0.60))
         conf_pct = min(avg_conf, 1.0)
         st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.78rem; margin-bottom: 6px;">
-            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">CONFIDENCE SLA</span>
-            <span><b style="color: #FFFFFF; font-size: 0.88rem;">{avg_conf:.1%}</b> <span style="color: #64748B;">(Min: {min_conf:.0%})</span></span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.72rem; margin-bottom: 3px;">
+            <span style="color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.70rem;">CONFIDENCE SLA</span>
+            <span><b style="color: #FFFFFF; font-size: 0.82rem;">{avg_conf:.1%}</b> <span style="color: #64748B; font-size: 0.72rem;">(Min: {min_conf:.0%})</span></span>
         </div>
         """, unsafe_allow_html=True)
         st.progress(conf_pct)
