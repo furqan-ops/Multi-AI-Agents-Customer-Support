@@ -32,13 +32,13 @@ SUPABASE_KEY = get_secret("SUPABASE_SECRET_KEY") or get_secret("SUPABASE_KEY") o
 
 st.set_page_config(
     page_title="Multi-Agent Performance & Cost Governance Center",
-    page_icon=":material/monitoring:",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ---------- 2026 Ultra-Modern Obsidian CSS & Scrollbars ----------
-st.html("""
+st.markdown("""
 <style>
 /* Modern Typography */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -270,7 +270,7 @@ button[kind="secondary"]:hover {
     box-shadow: 0 0 12px rgba(139, 92, 246, 0.3) !important;
 }
 </style>
-""")
+""", unsafe_allow_html=True)
 
 # ---------- Supabase Client & Data Loaders ----------
 @st.cache_resource
