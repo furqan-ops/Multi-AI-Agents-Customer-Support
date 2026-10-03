@@ -20,15 +20,6 @@ chartCategoricalColors = ["#8B5CF6", "#06B6D4", "#10B981", "#F59E0B", "#F43F5E",
 dataframeBorderColor = "#1F2937"
 dataframeHeaderBackgroundColor = "#162032"
 
-# Status colors
-blueColor = "#38BDF8"
-greenColor = "#10B981"
-yellowColor = "#F59E0B"
-redColor = "#F43F5E"
-violetColor = "#8B5CF6"
-orangeColor = "#FB923C"
-grayColor = "#64748B"
-
 [theme.sidebar]
 backgroundColor = "#080C14"
 secondaryBackgroundColor = "#0F172A"
