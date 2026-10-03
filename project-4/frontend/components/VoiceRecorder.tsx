@@ -33,6 +33,8 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
+  const speechRecognitionRef = useRef<any>(null)
+  const browserTranscriptRef = useRef<string>('')
   const [error, setError] = useState<string>('')
   const [recordSeconds, setRecordSeconds] = useState<number>(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -100,6 +102,23 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
           return
         }
 
+        if (speechRecognitionRef.current) {
+          try {
+            speechRecognitionRef.current.stop()
+          } catch (_) {}
+          speechRecognitionRef.current = null
+        }
+
+        // 1. If browser captured transcript directly via native speech recognition, use it immediately!
+        if (browserTranscriptRef.current && browserTranscriptRef.current.trim()) {
+          setError('')
+          const finalBrowserText = browserTranscriptRef.current.trim()
+          browserTranscriptRef.current = ''
+          await onRecordingComplete(audioBlob, finalBrowserText)
+          return
+        }
+
+        // 2. Fall back to /api/stt server transcription
         try {
           const sttResponse = await fetch('/api/stt', {
             method: 'POST',
@@ -110,7 +129,7 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
           })
 
           if (!sttResponse.ok) {
-            throw new Error(`STT server returned status ${sttResponse.status}`)
+            throw new Error(`STT server status ${sttResponse.status}`)
           }
 
           const sttData = await sttResponse.json()
@@ -129,6 +148,35 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
           setError(`Transcription: ${msg}. You can also type your message in the chat.`)
           console.error('STT error:', err)
           if (onRecordingError) onRecordingError(msg)
+        }
+      }
+
+      // Start browser native speech recognition concurrently if supported
+      browserTranscriptRef.current = ''
+      if (typeof window !== 'undefined') {
+        const SpeechRec =
+          (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        if (SpeechRec) {
+          try {
+            const rec = new SpeechRec()
+            rec.continuous = true
+            rec.interimResults = true
+            rec.lang = 'en-US'
+            rec.onresult = (e: any) => {
+              let textAccumulator = ''
+              for (let i = 0; i < e.results.length; i++) {
+                textAccumulator += e.results[i][0].transcript
+              }
+              if (textAccumulator.trim()) {
+                browserTranscriptRef.current = textAccumulator.trim()
+              }
+            }
+            rec.onerror = () => {}
+            rec.start()
+            speechRecognitionRef.current = rec
+          } catch (recErr) {
+            console.warn('SpeechRecognition initialization note:', recErr)
+          }
         }
       }
 
@@ -159,6 +207,13 @@ const VoiceRecorder = forwardRef<VoiceRecorderHandle, VoiceRecorderProps>(functi
 
   const cancelRecording = () => {
     try {
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.abort()
+        } catch (_) {}
+        speechRecognitionRef.current = null
+      }
+      browserTranscriptRef.current = ''
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         isCanceledRef.current = true
         mediaRecorderRef.current.stop()
