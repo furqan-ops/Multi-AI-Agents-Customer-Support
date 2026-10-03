@@ -184,38 +184,42 @@ section[data-testid="stSidebar"],
 }
 
 .pill-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 7px;
-    border-radius: 5px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 0 14px !important;
+    border-radius: 6px !important;
+    font-size: 0.74rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
 }
-.pill-optimal { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
-.pill-warning { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
-.pill-danger  { background: rgba(244, 63, 94, 0.15); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.3); }
-.pill-neutral { background: rgba(148, 163, 184, 0.15); color: #CBD5E1; border: 1px solid rgba(148, 163, 184, 0.3); }
+.pill-optimal { background: rgba(16, 185, 129, 0.15) !important; color: #34D399 !important; border: 1px solid rgba(16, 185, 129, 0.3) !important; }
+.pill-warning { background: rgba(245, 158, 11, 0.15) !important; color: #FBBF24 !important; border: 1px solid rgba(245, 158, 11, 0.3) !important; }
+.pill-danger  { background: rgba(244, 63, 94, 0.15) !important; color: #FB7185 !important; border: 1px solid rgba(244, 63, 94, 0.3) !important; }
+.pill-neutral { background: rgba(148, 163, 184, 0.15) !important; color: #CBD5E1 !important; border: 1px solid rgba(148, 163, 184, 0.3) !important; }
 
 /* Header Action Button Alignment */
 div[data-testid="stButton"] {
     display: flex !important;
     align-items: center !important;
+    justify-content: flex-end !important;
     height: 100% !important;
     margin: 0 !important;
 }
 div[data-testid="stButton"] button {
-    height: 32px !important;
-    min-height: 32px !important;
-    line-height: 32px !important;
-    padding: 0 14px !important;
-    font-size: 0.76rem !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    line-height: 34px !important;
+    padding: 0 16px !important;
+    font-size: 0.78rem !important;
     font-weight: 600 !important;
     border-radius: 6px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    white-space: nowrap !important;
     margin: 0 !important;
 }
 
@@ -604,7 +608,7 @@ if not guard.empty and "created_at" in guard.columns:
     guard["created_at"] = pd.to_datetime(guard["created_at"])
 
 # ---------- Dashboard Header ----------
-h_col1, h_col2, h_col3 = st.columns([0.72, 0.13, 0.15], vertical_alignment="center")
+h_col1, h_col2, h_col3 = st.columns([0.56, 0.20, 0.24], vertical_alignment="center")
 with h_col1:
     st.markdown("""
     <div style="padding-top: 4px; margin-bottom: 8px;">
@@ -620,16 +624,16 @@ with h_col1:
         st.info("💡 **Connecting Live Supabase:** Currently displaying cached cluster telemetry. To connect your live Supabase database, paste `SUPABASE_URL` and `SUPABASE_SECRET_KEY` into **Streamlit Cloud Settings > Secrets**.")
 
 with h_col2:
-    if st.button("Refresh", icon=":material/refresh:", width="stretch"):
+    if st.button("Refresh", icon=":material/refresh:", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
 with h_col3:
     unack_count = len(alerts_df[alerts_df["acknowledged"] == False]) if not alerts_df.empty and "acknowledged" in alerts_df.columns else 0
     if unack_count > 0:
-        st.markdown(f'<div style="display: flex; align-items: center; justify-content: flex-end; height: 32px;"><span class="pill-tag pill-danger" style="padding: 0 10px; height: 32px; line-height: 32px; font-size: 0.70rem; display: inline-flex; align-items: center; box-sizing: border-box;">● {unack_count} Unresolved</span></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-danger" style="padding: 0 16px; height: 34px; line-height: 34px; font-size: 0.76rem; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; white-space: nowrap;">● {unack_count} Unresolved</span></div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div style="display: flex; align-items: center; justify-content: flex-end; height: 32px;"><span class="pill-tag pill-optimal" style="padding: 0 10px; height: 32px; line-height: 32px; font-size: 0.70rem; display: inline-flex; align-items: center; box-sizing: border-box;">● Systems Optimal</span></div>', unsafe_allow_html=True)
+        st.markdown('<div style="display: flex; align-items: center; justify-content: flex-end; height: 34px;"><span class="pill-tag pill-optimal" style="padding: 0 16px; height: 34px; line-height: 34px; font-size: 0.76rem; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; white-space: nowrap;">● Systems Optimal</span></div>', unsafe_allow_html=True)
 
 # ---------- KPI Metrics Calculation ----------
 total_conv = len(conv)
