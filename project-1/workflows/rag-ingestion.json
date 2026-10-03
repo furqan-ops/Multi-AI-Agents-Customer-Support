@@ -1,0 +1,237 @@
+{
+  "name": "RAG Ingestion",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "31d0148d-925d-4f0b-9b9e-de2270426476",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/data/project-1/faq.txt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7c48bb7f-a0ca-4521-be79-80bbe8cecc2f",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "destinationKey": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        16
+      ],
+      "id": "50492023-866c-4488-bf63-f0730ddb6d47",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst text = item.json.text;\nconst source = \"faq.txt\";\nconst size = 500;\nconst chunks = [];\n\nfor (let i = 0; i < text.length; i += size) {\n  chunks.push({\n    json: {\n      content: text.slice(i, i + size).trim(),\n      chunk_index: chunks.length,\n      source: source,\n    }\n  });\n}\n\nreturn chunks;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -224
+      ],
+      "id": "7a631f63-daa3-443f-aa03-56d0c6970c3e",
+      "name": "Chunk Text"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/embeddings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "input",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "model",
+              "value": "openai/text-embedding-3-small"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        -224
+      ],
+      "id": "c7719a59-d6da-42ba-9e2a-5391518ff6f5",
+      "name": "Create Embedding",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "6czXILXBUyJcRM3S",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const embedding = item.json.data[0].embedding;\n  results.push({\n    json: {\n      content: item.json.content,\n      embedding: JSON.stringify(embedding),\n      source: item.json.source,\n      chunk_index: item.json.chunk_index,\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -224
+      ],
+      "id": "7bc38cbd-4c74-4d21-815b-c618dc40fff9",
+      "name": "Format Embedding"
+    },
+    {
+      "parameters": {
+        "tableId": "documents",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $json.content }}"
+            },
+            {
+              "fieldId": "embedding",
+              "fieldValue": "=\t{{ $json.embedding }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.source }}"
+            },
+            {
+              "fieldId": "chunk_index",
+              "fieldValue": "={{ $json.chunk_index }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        688,
+        -224
+      ],
+      "id": "f2688799-fb56-4804-b0a9-b295552d4f71",
+      "name": "Insert Document",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2ml9Sj3Y3e9gKqGs",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Chunk Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chunk Text": {
+      "main": [
+        [
+          {
+            "node": "Create Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Embedding": {
+      "main": [
+        [
+          {
+            "node": "Format Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Embedding": {
+      "main": [
+        [
+          {
+            "node": "Insert Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c401a202-6a7d-48f9-a5b1-81361e7e6562",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aba2ba7f74e0833fecefe00cbbafe95beaa9fa8fd74f3c082e73f9bd68e63448"
+  },
+  "nodeGroups": [],
+  "id": "VWjYZCrSl4Nz0GSJ",
+  "tags": []
+}

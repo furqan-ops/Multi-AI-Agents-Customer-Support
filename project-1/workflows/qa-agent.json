@@ -1,0 +1,345 @@
+{
+  "name": "QA Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "qa",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "4df7cab4-d769-4df5-8b2a-41cbf9e73c99",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        112
+      ],
+      "webhookId": "qa-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "agent",
+              "value": "={{ $json.body.agent }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "response",
+              "value": "={{ $json.body.response }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "context",
+              "value": "={{ $json.body.context || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "user_message",
+              "value": "={{ $json.body.user_message || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bcf06ba7-7cf3-4bc4-95ee-7071bef272cf",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -896,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a strict fact-checker. You must reject any response that makes a claim NOT explicitly stated in the context.\n\nContext:\n{{ $json.context }}\n\nQuestion: {{ $json.user_message }}\n\nAgent response: {{ $json.response }}\n\nStep 1: List every factual claim in the agent response.\nStep 2: For each claim, check if it appears in the context.\nStep 3: If ANY claim is not in the context, approved = false.\nStep 4: If ALL claims appear in the context, approved = true.\n\nReturn ONLY this JSON:\n{\"approved\": true/false, \"reason\": \"...\"}"
+      },
+      "id": "c9989702-3a3e-4d39-9fe0-882af613e9b9",
+      "name": "QA Review",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -464,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/free",
+          "mode": "list",
+          "cachedResultName": "openrouter/free"
+        },
+        "options": {}
+      },
+      "id": "d193f449-eec9-409d-975b-3858056b2c43",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        304
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "h32tgRZPBI5Wqx9S",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst preCheck = $('Keyword Check').first().json;\n\n// Debug: log what preCheck sees\nconsole.log('PRECHECK:', JSON.stringify(preCheck));\n\nconst llmItem = $input.first();\nlet raw = llmItem.json.text || llmItem.json.response || \"\";\nlet parsed;\n\ntry {\n  const cleaned = raw.replace(/```json|```/g, \"\").trim();\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  parsed = { approved: false, reason: \"invalid_json_from_qa\" };\n}\n\n// Strict boolean check\nconst preApproved = preCheck.approved === true;\nconst llmApproved = parsed.approved === true;\n\nconst approved = preApproved && llmApproved;\n\nlet reason;\nif (!preApproved) {\n  reason = \"keyword_check_failed: \" + (preCheck.reason || \"unknown\");\n} else if (!llmApproved) {\n  reason = \"llm_qa_failed: \" + (parsed.reason || \"unknown\");\n} else {\n  reason = \"both_passed\";\n}\n\nresults.push({\n  json: {\n    request_id: preCheck.request_id,\n    agent: preCheck.agent,\n    response: preCheck.response,\n    approved: approved,\n    reason: reason,\n    debug_preApproved: preApproved,\n    debug_llmApproved: llmApproved\n  }\n});\n\nreturn results;"
+      },
+      "id": "9bf018d4-2206-46bf-af2a-bdee720a4482",
+      "name": "Parse QA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "934bf443-c43a-4c6a-b0d8-101e48f2b53b",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nif (item.approved) {\n  return [{ json: { status: 'approved', response: item.response } }];\n}\n\nreturn [{\n  json: {\n    status: 'rejected',\n    reason: item.reason,\n    escalate_to: 'human',\n    request_id: item.request_id\n  }\n}];"
+      },
+      "id": "dba616ea-0c49-4c80-baab-2190efa30ff1",
+      "name": "Final Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "conversations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "request_id",
+              "fieldValue": "={{ $json.request_id }}-qa-{{ $now.toMillis() }}"
+            },
+            {
+              "fieldId": "agent",
+              "fieldValue": "qa"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "={{ $json.approved ? 'approved' : 'rejected: ' + $json.reason }}"
+            },
+            {
+              "fieldId": "confidence",
+              "fieldValue": "={{ $json.approved ? 1 : 0 }}"
+            }
+          ]
+        }
+      },
+      "id": "4a3e9382-1ae3-4738-9c2f-6a8ba3b4380c",
+      "name": "Log QA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "2ml9Sj3Y3e9gKqGs",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        416,
+        208
+      ],
+      "id": "088c5a05-6ce4-468c-b70a-ee00c8ce8d39",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst response = (item.response || \"\").toLowerCase();\nconst context = (item.context || \"\").toLowerCase();\n\n// Extract keywords from response (words > 4 chars)\nconst words = response.match(/\\b[a-z]{5,}\\b/g) || [];\nconst uniqueWords = [...new Set(words)];\n\n// Count how many response keywords appear in context\nlet found = 0;\nfor (const w of uniqueWords) {\n  if (context.includes(w)) found++;\n}\n\nconst coverage = uniqueWords.length > 0 ? found / uniqueWords.length : 0;\n\n// If less than 50% of response keywords appear in context, reject\nconst approved = coverage >= 0.5;\n\nreturn [{\n  json: {\n    ...item,\n    approved: approved,\n    reason: approved\n      ? `keyword coverage ${Math.round(coverage * 100)}%`\n      : `low keyword coverage ${Math.round(coverage * 100)}% - likely hallucination`,\n    skip_llm: approved\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        112
+      ],
+      "id": "8ba58db3-2951-4be6-9fb6-99e611183217",
+      "name": "Keyword Check"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Keyword Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "QA Review",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA Review": {
+      "main": [
+        [
+          {
+            "node": "Parse QA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse QA": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Log QA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Final Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Decision": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Check": {
+      "main": [
+        [
+          {
+            "node": "QA Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bc63b697-f25d-443d-9d20-d92c11943d7b",
+  "meta": {
+    "instanceId": "aba2ba7f74e0833fecefe00cbbafe95beaa9fa8fd74f3c082e73f9bd68e63448"
+  },
+  "nodeGroups": [],
+  "id": "5GZmNJ4bmH2SFg1N",
+  "tags": []
+}

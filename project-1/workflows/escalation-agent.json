@@ -1,0 +1,247 @@
+{
+  "name": "Escalation Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "escalate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5d21dbd7-9ee3-470c-8c42-7f5eae51498c",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -224
+      ],
+      "webhookId": "escalate-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id || $now.toMillis().toString() }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "user_id",
+              "value": "={{ $json.body.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "channel",
+              "value": "={{ $json.body.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "reason",
+              "value": "={{ $json.body.reason || 'low_confidence' }}",
+              "type": "string"
+            },
+            {
+              "id": "f6",
+              "name": "agent",
+              "value": "={{ $json.body.agent || 'support' }}",
+              "type": "string"
+            },
+            {
+              "id": "f7",
+              "name": "confidence",
+              "value": "={{ $json.body.confidence || 0 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aea79990-60c1-49ca-b604-52858908d422",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "conversations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "request_id",
+              "fieldValue": "={{ $json.request_id }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id }}"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "={{ $json.channel }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.message }}"
+            },
+            {
+              "fieldId": "intent",
+              "fieldValue": "escalation"
+            },
+            {
+              "fieldId": "agent",
+              "fieldValue": "={{ $json.agent }}"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "=Escalated: {{ $json.reason }}"
+            },
+            {
+              "fieldId": "confidence",
+              "fieldValue": "={{ $json.confidence }}"
+            }
+          ]
+        }
+      },
+      "id": "ead370a0-4935-49e9-b7b5-7181a24a526e",
+      "name": "Log Escalation",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        288,
+        -224
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "2ml9Sj3Y3e9gKqGs",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nconst ticket = {\n  ticket_id: 'ESC-' + Date.now(),\n  request_id: item.request_id,\n  user_id: item.user_id,\n  channel: item.channel,\n  message: item.message,\n  reason: item.reason,\n  agent: item.agent,\n  confidence: item.confidence,\n  priority: item.reason === 'emergency' ? 'high' : 'normal',\n  created_at: new Date().toISOString(),\n  status: 'pending_human'\n};\n\nreturn [{ json: ticket }];"
+      },
+      "id": "efcb3a29-d333-47e8-bba9-241c214312c7",
+      "name": "Build Ticket",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ticket = $input.first().json;\n\n// Placeholder for notification\n// In production: send email via SMTP, SMS via Twilio, Slack message, etc.\nconsole.log('ESCALATION TICKET:', JSON.stringify(ticket, null, 2));\n\nreturn [{ json: ticket }];"
+      },
+      "id": "7ce539ed-59a4-4879-a8e6-4f3ecea2da5a",
+      "name": "Notify Human",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        944,
+        -224
+      ],
+      "id": "ce4c2d2e-3bfa-431d-bd6f-e6b9fb257038",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Log Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Escalation": {
+      "main": [
+        [
+          {
+            "node": "Build Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Ticket": {
+      "main": [
+        [
+          {
+            "node": "Notify Human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Human": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4e40b232-2727-477f-844b-ea65e22123a0",
+  "meta": {
+    "instanceId": "aba2ba7f74e0833fecefe00cbbafe95beaa9fa8fd74f3c082e73f9bd68e63448"
+  },
+  "nodeGroups": [],
+  "id": "bDsxnDpdDwZJFJh8",
+  "tags": []
+}

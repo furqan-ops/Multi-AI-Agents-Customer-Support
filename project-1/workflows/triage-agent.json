@@ -1,0 +1,203 @@
+{
+  "name": "Triage Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "triage",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        -64
+      ],
+      "id": "e12f0786-8790-48eb-b302-93685b6cf1d1",
+      "name": "Webhook",
+      "webhookId": "bf4f8cb2-e0df-4441-a821-a46303c848e0"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "228602a1-8be6-439e-b6ed-12c755fcc5ca",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id || $now.toMillis().toString() }}",
+              "type": "string"
+            },
+            {
+              "id": "8b24b864-5286-4aba-9cd6-11bd189d408e",
+              "name": "user_id",
+              "value": "={{ $json.body.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "63647d8b-a60b-4691-acea-da1d1648767d",
+              "name": "channel",
+              "value": "={{ $json.body.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "2eddbaa9-15eb-4c36-957b-2a356ee611f5",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        176,
+        -112
+      ],
+      "id": "8e0b1339-6fa2-4915-8d23-6e2530304bc4",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a Triage Agent. Classify the user message into exactly one intent: - booking - faq - complaint - emergency  Return ONLY valid JSON in this exact format: {\"intent\": \"<intent>\", \"confidence\": <number between 0 and 1>}  Do not add any other text."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        416,
+        -144
+      ],
+      "id": "98615abb-c8ae-4c69-b51c-7ef327680299",
+      "name": "Triage LLM"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "meta-llama/llama-3.3-70b-instruct",
+          "mode": "list",
+          "cachedResultName": "meta-llama/llama-3.3-70b-instruct"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        16
+      ],
+      "id": "f7763c0d-44e1-4653-9d61-8b4378f4af40",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "h32tgRZPBI5Wqx9S",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "conversations"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -144
+      ],
+      "id": "9473bce9-5b3e-4aa6-ab9a-be69a5dd4c91",
+      "name": "Log to Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2ml9Sj3Y3e9gKqGs",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  let raw = item.json.text || item.json.response || \"\";\n  let parsed;\n\n  try {\n    const cleaned = raw.replace(/```json|```/g, \"\").trim();\n    parsed = JSON.parse(cleaned);\n  } catch (e) {\n    parsed = { intent: \"escalate\", confidence: 0 };\n  }\n\n  const validIntents = [\"booking\", \"faq\", \"complaint\", \"emergency\"];\n  if (!validIntents.includes(parsed.intent)) {\n    parsed = { intent: \"escalate\", confidence: 0 };\n  }\n\n  results.push({\n    json: {\n      ...item.json,\n      intent: parsed.intent,\n      confidence: parsed.confidence,\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "5ae6906b-979f-4119-b1ae-500c02aca814",
+      "name": "Parse Intent"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Triage LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Triage LLM",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Triage LLM": {
+      "main": [
+        [
+          {
+            "node": "Parse Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1e076f1c-3a1f-42d9-8ead-8aacd2f569a5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aba2ba7f74e0833fecefe00cbbafe95beaa9fa8fd74f3c082e73f9bd68e63448"
+  },
+  "nodeGroups": [],
+  "id": "1q4Y78v0O2epmacM",
+  "tags": []
+}

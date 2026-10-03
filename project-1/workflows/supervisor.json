@@ -1,0 +1,328 @@
+{
+  "name": "Supervisor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "supervisor",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "be51793b-dafd-4683-89d8-e357180dd1da",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        128
+      ],
+      "webhookId": "supervisor-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id || $now.toMillis().toString() }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "user_id",
+              "value": "={{ $json.body.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "channel",
+              "value": "={{ $json.body.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b7048027-db76-48be-801c-3382493741d6",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -656,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst msg = (item.message || \"\").toLowerCase().trim();\n\nlet intent = \"faq\";\n\nif (/^(hello|hi|hey|good morning|good afternoon|good evening|howdy)\\b/.test(msg) || [\"hello\", \"hi\", \"hey\"].includes(msg)) {\n  intent = \"greeting\";\n} else if (/(did|is|has).*(order|booking|reservation).*(book|confirm|place|go through|succeed)|(check|track|view|status of).*(order|booking|reservation)/.test(msg)) {\n  intent = \"booking_status\";\n} else if (/book|reserve|table|reservation/.test(msg)) {\n  intent = \"booking\";\n} else if (/complaint|angry|terrible|worst|unacceptable|sue|lawyer/.test(msg)) {\n  intent = \"complaint\";\n} else if (/fire|emergency|urgent|help now/.test(msg)) {\n  intent = \"emergency\";\n}\n\nreturn [{\n  json: {\n    ...item,\n    intent: intent\n  }\n}];"
+      },
+      "id": "dc1d90bb-4dbd-4a2c-a15f-94b1b8e42ae1",
+      "name": "Fast Triage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "booking",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "419006d6-b595-4a03-bf27-ad898da0b0f7",
+      "name": "Is Booking?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "faq",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "633b4433-809f-4bcd-bbfb-03cfc43f74b0",
+      "name": "Is Support?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        0,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:5678/webhook/booking",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "e74db9ac-e75f-40f7-9149-8e4cb2aec7de",
+      "name": "Call Booking Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:5678/webhook/support",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "028a826d-e5bd-4e66-9408-e3ad00b34f53",
+      "name": "Call Support Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:5678/webhook/escalate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ...$json, reason: $json.intent, agent: 'supervisor' }) }}",
+        "options": {}
+      },
+      "id": "f481a966-f543-46b1-907b-6984af6b563a",
+      "name": "Call Escalation Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "e52a8aad-5eb1-4e81-b52e-cec0085ddfbe",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        128
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Fast Triage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fast Triage": {
+      "main": [
+        [
+          {
+            "node": "Is Booking?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Booking?": {
+      "main": [
+        [
+          {
+            "node": "Call Booking Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Support?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Support?": {
+      "main": [
+        [
+          {
+            "node": "Call Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Escalation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Booking Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Support Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Escalation Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1b2fb04d-09c3-4444-b112-22f07a6c48b8",
+  "meta": {
+    "instanceId": "aba2ba7f74e0833fecefe00cbbafe95beaa9fa8fd74f3c082e73f9bd68e63448"
+  },
+  "nodeGroups": [],
+  "id": "6wEDeT90Yju8FjWv",
+  "tags": []
+}

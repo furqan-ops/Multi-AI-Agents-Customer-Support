@@ -1,0 +1,557 @@
+{
+  "name": "Support Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f2a9975c-d288-4140-b04d-b97587cfaa54",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1792,
+        704
+      ],
+      "webhookId": "support-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id || $now.toMillis().toString() }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "user_id",
+              "value": "={{ $json.body.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "channel",
+              "value": "={{ $json.body.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b8c85478-d486-4b81-8532-b937d4e4c0d0",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1568,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/embeddings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OPENROUTER_API_KEY || 'YOUR_OPENROUTER_API_KEY' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "input",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "model",
+              "value": "openai/text-embedding-3-small"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8042aec5-f0ae-43de-a7ee-2b2d67d37fec",
+      "name": "Embed Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1360,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst embedding = item.json.data[0].embedding;\n\nreturn [{\n  json: {\n    query_embedding: JSON.stringify(embedding),\n    message: item.json.message || $('Normalize Input').first().json.message,\n  }\n}];"
+      },
+      "id": "e0168adb-d80c-4c39-a36a-9e31071e5e6c",
+      "name": "Format Query Vector",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const chunks = $input.all().map(i => i.json);\nconst context = chunks.map(c => c.content).join(\"\\n\\n---\\n\\n\");\nconst sources = [...new Set(chunks.map(c => c.source))];\nconst topSimilarity = chunks[0]?.similarity || 0;\n\nreturn [{\n  json: {\n    context: context,\n    sources: sources,\n    top_similarity: topSimilarity,\n  }\n}];"
+      },
+      "id": "4345a107-282b-4e06-876e-8d3137d23ec3",
+      "name": "Build Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Context:\n{{ $json.context }}\n\nQuestion: {{ $('Normalize Input').item.json.message }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a Support Agent. You must respond with ONLY a valid JSON object.  Use ONLY the provided context. Do not add reasoning, do not add explanations, do not use <think> tags.  Format: {\"answer\": \"your answer text\", \"confidence\": 0.9}  If the answer is not in the context: {\"answer\": null, \"confidence\": 0}  Nothing else. No markdown. No code fences."
+            }
+          ]
+        }
+      },
+      "id": "265907ac-6073-4386-a34b-ccb17d923a1d",
+      "name": "Generate Answer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -544,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "meta-llama/llama-3.1-8b-instruct",
+          "mode": "list",
+          "cachedResultName": "meta-llama/llama-3.1-8b-instruct"
+        },
+        "options": {}
+      },
+      "id": "74891b08-42f1-4d25-a029-815e23697bd6",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        896
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "h32tgRZPBI5Wqx9S",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  let raw = item.json.text || item.json.response || \"\";\n\n  // Strip <think>...</think> blocks\n  raw = raw.replace(/<think>[\\s\\S]*?<\\/think>/g, \"\").trim();\n\n  // Strip markdown code fences\n  raw = raw.replace(/```json|```/g, \"\").trim();\n\n  let parsed;\n  try {\n    parsed = JSON.parse(raw);\n  } catch (e) {\n    // Try to extract JSON from text\n    const match = raw.match(/\\{[\\s\\S]*\\}/);\n    if (match) {\n      try {\n        parsed = JSON.parse(match[0]);\n      } catch (e2) {\n        parsed = { answer: null, confidence: 0 };\n      }\n    } else {\n      parsed = { answer: null, confidence: 0 };\n    }\n  }\n\n  results.push({\n    json: {\n      answer: parsed.answer,\n      confidence: parsed.confidence,\n      sources: $('Build Context').first().json.sources,\n      top_similarity: $('Build Context').first().json.top_similarity,\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "0879de9e-fb86-475c-90d8-27b3db9d0934",
+      "name": "Parse Answer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.confidence }}",
+              "rightValue": 0.7,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f35d1851-40af-4788-86e1-7ac0659c6119",
+      "name": "Confidence Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "conversations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "request_id",
+              "fieldValue": "={{ $('Normalize Input').item.json.request_id }}-support"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Normalize Input').item.json.user_id }}"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "={{ $('Normalize Input').item.json.channel }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Normalize Input').item.json.message }}"
+            },
+            {
+              "fieldId": "intent",
+              "fieldValue": "faq"
+            },
+            {
+              "fieldId": "agent",
+              "fieldValue": "support"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "={{ $('Parse Answer').item.json.answer }}"
+            },
+            {
+              "fieldId": "confidence",
+              "fieldValue": "={{ $('Parse Answer').item.json.confidence }}"
+            }
+          ]
+        }
+      },
+      "id": "024d7471-9c83-46c8-917c-3942d8d05363",
+      "name": "Log Escalation",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        208,
+        592
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "2ml9Sj3Y3e9gKqGs",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "conversations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "request_id",
+              "fieldValue": "={{ $('Normalize Input').item.json.request_id }}-support-esc"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Normalize Input').item.json.user_id }}"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "={{ $('Normalize Input').item.json.channel }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Normalize Input').item.json.message }}\t"
+            },
+            {
+              "fieldId": "intent",
+              "fieldValue": "faq"
+            },
+            {
+              "fieldId": "agent",
+              "fieldValue": "support"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "Escalated: low confidence"
+            },
+            {
+              "fieldId": "confidence",
+              "fieldValue": "={{ $('Parse Answer').item.json.confidence }}"
+            }
+          ]
+        }
+      },
+      "id": "d045750d-ec35-403b-8d1c-21ea717a6822",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        208,
+        800
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "2ml9Sj3Y3e9gKqGs",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tlmfuhoovrmgivslkxar.supabase.co/rest/v1/rpc/match_documents",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY || 'YOUR_SUPABASE_KEY' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query_embedding",
+              "value": "={{ $json.query_embedding }}"
+            },
+            {
+              "name": "match_count",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -912,
+        704
+      ],
+      "id": "a2ecded7-835c-421a-9395-050a3ad7b61f",
+      "name": "Search Documents"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\": \"answered\", \"answer\": \"{{ $('Parse Answer').item.json.answer }}\", \"confidence\": {{ $('Parse Answer').item.json.confidence }}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        432,
+        800
+      ],
+      "id": "385b915c-2860-4e67-9629-91583d2e360e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\": \"escalated\", \"reason\": \"low_confidence\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        368,
+        608
+      ],
+      "id": "12754cd4-3ab9-402c-92ae-7cc2ddfdae13",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Embed Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embed Query": {
+      "main": [
+        [
+          {
+            "node": "Format Query Vector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Query Vector": {
+      "main": [
+        [
+          {
+            "node": "Search Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Context": {
+      "main": [
+        [
+          {
+            "node": "Generate Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Answer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Answer": {
+      "main": [
+        [
+          {
+            "node": "Parse Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Answer": {
+      "main": [
+        [
+          {
+            "node": "Confidence Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confidence Check": {
+      "main": [
+        [
+          {
+            "node": "Log Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Documents": {
+      "main": [
+        [
+          {
+            "node": "Build Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Success": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Escalation": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "20e4f8b5-2bdd-4c13-8cb0-b37ab14e7694",
+  "meta": {
+    "instanceId": "aba2ba7f74e0833fecefe00cbbafe95beaa9fa8fd74f3c082e73f9bd68e63448"
+  },
+  "nodeGroups": [],
+  "id": "NNPj42j2YJMH0Noh",
+  "tags": []
+}

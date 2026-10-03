@@ -1,0 +1,410 @@
+{
+  "name": "Booking Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "be8b2094-9828-4713-8aba-20e903305611",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        112
+      ],
+      "webhookId": "booking-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id || $now.toMillis().toString() }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "user_id",
+              "value": "={{ $json.body.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "channel",
+              "value": "={{ $json.body.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8d8925e4-c658-4aa1-89d8-3d5b180c84a1",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -896,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract booking details from this message: {{ $json.message }}\n\nToday is {{ $now.toISODate() }}.\n\nReturn ONLY valid JSON in this exact format:\n{\"date\": \"YYYY-MM-DD\", \"time\": \"HH:MM\", \"party_size\": <number>, \"missing\": []}\n\nIf any field is missing from the message, add its name to the missing array and use null for that field."
+      },
+      "id": "d03bd654-96c3-4609-b4a6-6a4e56bd1895",
+      "name": "Extract Details",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -688,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openrouter/free",
+          "mode": "list",
+          "cachedResultName": "openrouter/free"
+        },
+        "options": {}
+      },
+      "id": "4b1089df-f2ee-4786-93eb-71668a250aa4",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -688,
+        304
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "h32tgRZPBI5Wqx9S",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  let raw = item.json.text || item.json.response || \"\";\n  let parsed;\n\n  try {\n    const cleaned = raw.replace(/```json|```/g, \"\").trim();\n    parsed = JSON.parse(cleaned);\n  } catch (e) {\n    parsed = { date: null, time: null, party_size: null, missing: [\"all\"] };\n  }\n\n  results.push({\n    json: {\n      request_id: $('Normalize Input').first().json.request_id,\n      user_id: $('Normalize Input').first().json.user_id,\n      channel: $('Normalize Input').first().json.channel,\n      message: $('Normalize Input').first().json.message,\n      date: parsed.date,\n      time: parsed.time,\n      party_size: parsed.party_size,\n      missing: parsed.missing || []\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "492a3d64-1256-43d1-9c57-aeca5ee19714",
+      "name": "Parse Booking",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.missing.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "43749362-f95d-4fbc-a21f-6d92911a34e2",
+      "name": "Missing Fields?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "bookings",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Parse Booking').item.json.user_id }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $('Parse Booking').item.json.date }}"
+            },
+            {
+              "fieldId": "time",
+              "fieldValue": "={{ $('Parse Booking').item.json.time }}"
+            },
+            {
+              "fieldId": "party_size",
+              "fieldValue": "={{ $('Parse Booking').item.json.party_size }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "confirmed"
+            }
+          ]
+        }
+      },
+      "id": "e10c534d-a70d-4692-a81e-b5982eab45ba",
+      "name": "Create Booking",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "2ml9Sj3Y3e9gKqGs",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "conversations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "request_id",
+              "fieldValue": "={{ $('Parse Booking').item.json.request_id }}-booking"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Parse Booking').item.json.user_id }}"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "={{ $('Parse Booking').item.json.channel }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Parse Booking').item.json.message }}"
+            },
+            {
+              "fieldId": "intent",
+              "fieldValue": "booking"
+            },
+            {
+              "fieldId": "agent",
+              "fieldValue": "booking"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "Confirmed booking"
+            },
+            {
+              "fieldId": "confidence",
+              "fieldValue": "1"
+            }
+          ]
+        }
+      },
+      "id": "edde3793-6edc-439a-9596-f2438539627b",
+      "name": "Log Booking",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "2ml9Sj3Y3e9gKqGs",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $('Parse Booking').first().json;\nconst missing = item.missing || [];\n\nif (missing.includes('all') || missing.length >= 3) {\n  return [{\n    json: {\n      status: 'need_more_info',\n      request_id: item.request_id,\n      message: \"I'd be happy to help you book a table! Could you please let me know what date, time, and how many guests you would like to reserve for?\"\n    }\n  }];\n}\n\nconst questions = missing.map(f => {\n  if (f === 'date') return 'What date would you like?';\n  if (f === 'time') return 'What time?';\n  if (f === 'party_size') return 'How many people?';\n  return 'Could you please specify the ' + f + '?';\n});\n\nreturn [{\n  json: {\n    status: 'need_more_info',\n    request_id: item.request_id,\n    message: questions.join(' ')\n  }\n}];"
+      },
+      "id": "07713b4f-7a21-4aa0-a292-0bb0a1578e16",
+      "name": "Ask for Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\": \"confirmed\", \"date\": \"{{ $('Parse Booking').item.json.date }}\", \"time\": \"{{ $('Parse Booking').item.json.time }}\", \"party_size\": {{ $('Parse Booking').item.json.party_size }}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        432,
+        0
+      ],
+      "id": "b6441231-282a-4feb-94fc-199b33cacc12",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        208
+      ],
+      "id": "fa0386d1-585e-43a4-bb80-5be4adc0ad30",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Extract Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Details",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Details": {
+      "main": [
+        [
+          {
+            "node": "Parse Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Booking": {
+      "main": [
+        [
+          {
+            "node": "Missing Fields?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Missing Fields?": {
+      "main": [
+        [
+          {
+            "node": "Ask for Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Booking": {
+      "main": [
+        [
+          {
+            "node": "Log Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Booking": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask for Details": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b1df229e-1e27-4e52-94ee-2264f155daa4",
+  "meta": {
+    "instanceId": "aba2ba7f74e0833fecefe00cbbafe95beaa9fa8fd74f3c082e73f9bd68e63448"
+  },
+  "nodeGroups": [],
+  "id": "YaNLmC5vPzAgJ4Tj",
+  "tags": []
+}

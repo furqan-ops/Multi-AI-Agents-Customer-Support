@@ -1,0 +1,9 @@
+streamlit
+python-dotenv
+requests
+audio-recorder-streamlit
+supabase
+deepgram-sdk
+edge-tts
+uvicorn
+starlette
